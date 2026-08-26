@@ -685,9 +685,6 @@
   .ach-lbl{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;margin:6px 2px 6px}
   @media(max-width:520px){ .aw-team{max-width:30%} .aw-prize{min-width:78px;font-size:11px} .tda-comp{display:none} }
   /* Undian Tarian Kreatif */
-  .dance-reset-box{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:10px 0 14px;padding:12px 14px;border:1px solid rgba(176,58,58,.24);background:rgba(176,58,58,.045);border-radius:12px}
-  .dance-reset-copy{min-width:0;display:grid;gap:3px}.dance-reset-copy b{font-family:var(--display);font-size:10px;letter-spacing:1px;color:#9b3f3f}.dance-reset-copy span{font-size:10px;color:var(--muted);line-height:1.35}
-  @media(max-width:520px){.dance-reset-box{align-items:stretch;flex-direction:column}.dance-reset-box .btn{width:100%}}
   .dc-title{font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-weight:700;font-size:20px;text-align:center;margin:4px 0 16px}
   .dc-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
   .dc-col{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden}
@@ -3006,8 +3003,7 @@ function seed(){
     teamCount:30, thirdPlace:true, teams, ko:[],
     eventDate:'2026-09-26T09:00',
     about:{venue:'Labuan, Wilayah Persekutuan',tarikh:'26 September 2026 (Sabtu)',desc:'Borneo Arts Festival 2026 — Harta Pusaka. Pertandingan Tingkah Geruh (Battle) & Tarian Kreatif Borneo.',contact:''},
-    dance:{title:'TARIAN KREATIF BORNEO',s1:{name:'SESI 1',date:'26-09-2026 (Sabtu)',time:'2.00 Petang',teams:teams.slice(0,15).map(t=>t.id),done:0,active:false},s2:{name:'SESI 2',date:'26-09-2026 (Sabtu)',time:'7.00 Malam',teams:teams.slice(15,30).map(t=>t.id),done:0,active:false}},
-    homeDisplay:{danceS1:false,danceS2:false,battle:true},
+    dance:{title:'TARIAN KREATIF BORNEO',s1:{name:'SESI 1',date:'26-09-2026 (Sabtu)',time:'2.00 Petang',teams:teams.slice(0,15).map(t=>t.id)},s2:{name:'SESI 2',date:'26-09-2026 (Sabtu)',time:'7.00 Malam',teams:teams.slice(15,30).map(t=>t.id)}},
     awards:{}, seed:{titanium:'',platinum:'',gold:'',silver:''}
   };
 }
@@ -3182,116 +3178,33 @@ function cdHTML(){ const p=cdParts(); if(!p)return '';
 function tickCountdown(){ const el=$('#cdLive'); if(el)el.innerHTML=cdHTML(); }
 function renderHome(){
   const host=$('#tab-home'); if(!host)return;
-
-  const eventDate=new Date(T.eventDate||'2026-09-26T09:00');
-  const eventStarted=!isNaN(eventDate.getTime()) && Date.now()>=eventDate.getTime();
-  const ko=koMatches();
-  const done=ko.filter(matchDone);
-  const upcoming=ko.filter(m=>!matchDone(m)&&isReal(m.top)&&isReal(m.bot));
-  const next=upcoming[0]||null;
-
-  let liveMatch=null;
-  if(eventStarted){
-    liveMatch=ko.find(m=>!matchDone(m)&&isReal(m.top)&&isReal(m.bot))||null;
+  let h=`<div id="cdLive">${cdHTML()}</div>`;
+  h+=`<div class="pool-card"><div class="pool-lbl">🏆 Jumlah Hadiah Keseluruhan</div><div class="pool-v">${fmtRM(prizeTotalAll())}</div>
+    <div class="pool-sub"><span>Tingkah Geruh · ${fmtRM(prizeTotal('battle'))}</span><span>Tarian Kreatif · ${fmtRM(prizeTotal('tarian'))}</span></div></div>`;
+  const fs=finalStandings();
+  h+=`<div class="home-sec-t">Tingkah Geruh (Battle)</div>`;
+  if(isReal(fs.champ)){ const c=team(fs.champ);
+    h+=`<div class="champ-banner"><div>${tbadge(c)}</div><div style="min-width:0"><div class="cb-t">Juara Tingkah Geruh</div><div class="cb-n">${flagImg(c)}${esc(tName(c))}</div></div><div class="cb-tr">🏆</div></div>`;
   }
-
-  const statusLabel=eventStarted ? (liveMatch?'LIVE NOW':'EVENT LIVE') : 'UPCOMING';
-  const statusClass=eventStarted ? 'live' : 'upcoming';
-
-  const d=danceObj();
-  const n1=d.s1.teams.filter(id=>team(id)).length;
-  const n2=d.s2.teams.filter(id=>team(id)).length;
-  const totalTeams=T.teams.length;
-  const totalPrize=prizeTotalAll();
-
-  let h=`<section class="home-event-hero">
-    <div class="home-event-kicker">BORNEO ARTS FESTIVAL 2026</div>
-    <h1>HARTA PUSAKA</h1>
-    <div class="home-event-meta">
-      <span>26 SEPTEMBER 2026</span>
-      <i>•</i>
-      <span>LABUAN</span>
-    </div>
-    <div class="home-event-status ${statusClass}">
-      <span class="home-status-dot"></span>${statusLabel}
-    </div>
-  </section>`;
-
-  h+=`<div id="cdLive">${cdHTML()}</div>`;
-
-  h+=`<div class="pool-card home-prize-card">
-    <div class="pool-lbl">TOTAL PRIZE POOL</div>
-    <div class="pool-v">${fmtRM(totalPrize)}</div>
-    <div class="pool-sub">
-      <span><b>TARIAN KREATIF</b> · ${fmtRM(prizeTotal('tarian'))}</span>
-      <span><b>TINGKAH GERUH</b> · ${fmtRM(prizeTotal('battle'))}</span>
-    </div>
-  </div>`;
-
-  const hd=homeDisplayObj();
-  const p1=danceProgress(d.s1), p2=danceProgress(d.s2);
-  const danceDone=p1.done+p2.done, danceTotal=p1.total+p2.total;
-  const danceVisible=(hd.activeMode==='danceS1'||hd.activeMode==='danceS2') && (hd.activeMode==='danceS1'?p1.status!=='hidden':p2.status!=='hidden');
-  const activeDanceKey=hd.activeMode==='danceS2'?'danceS2':'danceS1';
-  const danceFinished=danceTotal>0 && danceDone>=danceTotal;
-  const danceTeamCard=(id)=>{ const t=team(id); if(!t)return `<div class="dance-home-team empty"><span>—</span><b>Belum ditetapkan</b></div>`; return `<div class="dance-home-team">${tbadge(t)}<div class="dance-home-team-name"><b>${esc(tName(t))}</b><span>${esc(tShort(t)||'')}</span></div></div>`; };
-
-  if(danceVisible){
-    h+=`<div class="home-sec-t">Tarian Kreatif Borneo · ${esc((hd.activeMode==='danceS2'?d.s2.name:d.s1.name)||'Sesi 1')}</div>
-      <div class="dance-home-wrap">
-        <div class="dance-home-head">
-          <div><span class="home-cat-k">LIVE PERFORMANCE TRACKER</span></div>
-          <strong>${danceDone}<small>/${danceTotal}</small></strong>
-        </div>
-        <div class="dance-progress"><span style="width:${danceTotal?Math.min(100,(danceDone/danceTotal)*100):0}%"></span></div>
-        <div class="dance-session-grid">
-          ${[
-            {s:d.s1,p:p1,show:hd.activeMode==='danceS1',i:0},
-            {s:d.s2,p:p2,show:hd.activeMode==='danceS2',i:1}
-          ].filter(x=>x.show).map((x)=>{
-            const s=x.s,p=x.p,status=p.status;
-            const shownId=status==='live'?p.activeId:status==='done'?p.lastId:p.nextId;
-            const label=status==='live'?'LIVE':status==='done'?'PERSEMBAHAN SELESAI':'SETERUSNYA';
-            return `<div class="dance-session-card ${status==='live'?'is-live':''} ${status==='done'?'is-done':''}">
-              <div class="dance-session-top"><b>${esc(s.name||('SESI '+(i+1)))}</b><span>${p.done}/${p.total}</span></div>
-              <div class="dance-state ${status==='live'?'live':status==='done'?'done':''}"><i></i>${label}</div>
-              ${shownId?danceTeamCard(shownId):`<div class="dance-home-team empty"><span>${p.finished?'✓':'—'}</span><b>${p.finished?'Semua pasukan selesai':'Belum ada pasukan'}</b></div>`}
-              ${p.nextId && status!=='next' ? `<div class="dance-next-mini"><span>SETERUSNYA</span>${danceTeamCard(p.nextId)}</div>`:''}
-            </div>`;
-          }).join('')}
-        </div>
-        ${danceFinished?`<div class="dance-finished-banner"><span>✓</span><div><b>SEMUA PERSEMBAHAN SELESAI</b><small>${danceTotal} pasukan telah selesai membuat persembahan · Menunggu keputusan juri</small></div></div>`:''}
-      </div>`;
-  }
-
-  if(hd.battle){
-    if(liveMatch){
-      h+=`<div class="home-sec-t">Tingkah Geruh · Live Now</div>${matchCard(liveMatch,true)}`;
-    }else if(next){
-      h+=`<div class="home-sec-t">Tingkah Geruh · Next Match</div>
-        <div class="home-next-card">
-          <div class="home-next-top"><span>${esc(next.round||'MATCH')}</span><b>${esc(koNo(next)||'NEXT')}</b></div>
-          <div class="home-next-main">${matchCard(next,true)}</div>
-        </div>`;
-    }else{
-      h+=`<div class="home-live-empty">
-        <div class="home-live-icon">✓</div>
-        <div><b>Tiada perlawanan aktif</b><span>Semua perlawanan yang tersedia akan dipaparkan di sini.</span></div>
-      </div>`;
-    }
-  }
-
-  /* Battle sahaja: Status Terkini + Keputusan Terkini.
-     Jika paparan utama ialah Tarian Kreatif, kedua-dua seksyen ini tidak dipaparkan. */
-  if(hd.battle){
-    h+=`<div class="home-sec-t">Status Terkini</div>${statHead()}`;
-
-    if(done.length){
-      h+=`<div class="home-sec-t">Keputusan Terkini</div>`;
-      done.slice(-3).reverse().forEach(m=>h+=matchCard(m,true));
-    }
-  }
-
+  h+=statHead();
+  const done=koMatches().filter(matchDone), upc=koMatches().filter(m=>!matchDone(m)&&isReal(m.top)&&isReal(m.bot));
+  if(done.length){ h+=`<div class="home-sec-t">Keputusan Terkini</div>`; done.slice(-4).reverse().forEach(m=>h+=matchCard(m,true)); }
+  if(upc.length){ h+=`<div class="home-sec-t">Akan Datang</div>`; upc.slice(0,4).forEach(m=>h+=matchCard(m,true)); }
+  if(!T.ko||!T.ko.length)h+=`<div class="empty">Bracket belum diundi. Admin boleh buat undian di tab Admin → Undian Tingkah Geruh.</div>`;
+  // ===== Tarian Kreatif Borneo =====
+  const d=danceObj(), tChamp=awardWinner('tk1'), n1=d.s1.teams.filter(id=>team(id)).length, n2=d.s2.teams.filter(id=>team(id)).length;
+  h+=`<div class="home-sec-t">Tarian Kreatif Borneo</div>`;
+  if(tChamp){ h+=`<div class="champ-banner"><div>${tbadge(tChamp)}</div><div style="min-width:0"><div class="cb-t">Juara Tarian Kreatif Borneo</div><div class="cb-n">${flagImg(tChamp)}${esc(tName(tChamp))}</div></div><div class="cb-tr">🏆</div></div>`; }
+  h+=`<div class="home-hero">
+    <div class="hstat"><span class="k">Pasukan</span><b>${T.teams.length}</b></div>
+    <div class="hstat"><span class="k">${esc(d.s1.name||'Sesi 1')}</span><b>${n1}</b></div>
+    <div class="hstat"><span class="k">${esc(d.s2.name||'Sesi 2')}</span><b>${n2}</b></div>
+    <div class="hstat"><span class="k">Diundi</span><b>${n1+n2}</b></div></div>`;
+  h+=`<div class="gcard"><div class="ghead"><h3>Sesi Persembahan</h3></div>`;
+  [d.s1,d.s2].forEach(s=>{ const n=s.teams.filter(id=>team(id)).length;
+    h+=`<div class="srow"><span class="tn"><b>${esc(s.name||'')}</b>${s.date?` · ${esc(s.date)}`:''}${s.time?` · ${esc(s.time)}`:''}</span><span class="aw-rprize">${n} pasukan</span></div>`; });
+  h+=`</div>`;
+  if(!n1&&!n2)h+=`<div class="empty">Undian tarian belum dibuat. Admin boleh susun di tab Admin → Undian Tarian Kreatif.</div>`;
   host.innerHTML=h;
 }
 
@@ -3301,8 +3214,7 @@ function renderTeams(){
   let h=`<div class="gcard"><div class="ghead"><h3>Pasukan · ${T.teams.length}</h3><span class="fx-gn">ketuk untuk detail</span></div>`;
   T.teams.forEach((t,i)=>{ const na=(t.ach||[]).length;
     h+=`<div class="srow tap" data-tdet="${t.id}"><span class="pos">${i+1}</span>${tbadge(t)}
-      <span class="tn">${flagImg(t)}${esc(tName(t))}${t.flagName?`<span class="sub2"> · ${esc(t.flagName)}</span>`:''}${na?`<span class="sub2"> · 🏅${na}</span>`:''}</span>
-      ${teamResultBadges(t.id)}</div>`;
+      <span class="tn">${flagImg(t)}${esc(tName(t))}${t.flagName?`<span class="sub2"> · ${esc(t.flagName)}</span>`:''}${na?`<span class="sub2"> · 🏅${na}</span>`:''}</span></div>`;
   });
   h+=`</div>`;
   if(!T.teams.length)h+=`<div class="empty">Belum ada pasukan.</div>`;
@@ -3683,7 +3595,6 @@ function renderAdmin(){
   const admGroups=[
     ['Tingkah Geruh',[['voting','Voting'],['results','Keputusan'],['draw','Undian Tingkah Geruh']]],
     ['Tarian Kreatif',[['dance','Undian Tarian Kreatif']]],
-    ['Paparan',[['homeDisplay','Paparan Home']]],
     ['Umum',[['teams','Pasukan'],['awards','Anugerah'],['settings','Tetapan']]]
   ];
   let h=`<div class="adm-groups">`;
@@ -3695,7 +3606,6 @@ function renderAdmin(){
   else if(adSec==='teams')h+=admTeams();
   else if(adSec==='voting')h+=admVoting();
   else if(adSec==='dance')h+=admDance();
-  else if(adSec==='homeDisplay')h+=admHomeDisplay();
   else if(adSec==='awards')h+=admAwards();
   else h+=admSettings();
   c.innerHTML=h;
@@ -3705,7 +3615,6 @@ function renderAdmin(){
   else if(adSec==='teams')bindTeams();
   else if(adSec==='voting')bindVoting();
   else if(adSec==='dance')bindDance();
-  else if(adSec==='homeDisplay')bindHomeDisplay();
   else if(adSec==='awards')bindAwards();
   else bindSettings();
 }
@@ -4025,36 +3934,8 @@ function renderVoteOverlay(){
 }
 
 /* ---------- Undian Tarian Kreatif ---------- */
-function danceObj(){ if(!T.dance||!T.dance.s1)T.dance={title:'Tarian Kreatif Borneo',s1:{name:'Sesi 1',date:'',time:'',teams:[],done:0,active:false,displayStatus:'next',perf:[]},s2:{name:'Sesi 2',date:'',time:'',teams:[],done:0,active:false,displayStatus:'next',perf:[]}};
-  [T.dance.s1,T.dance.s2].forEach(s=>{ if(!Array.isArray(s.teams))s.teams=[]; if(!Array.isArray(s.perf))s.perf=[];
-    /* Migrasi status lama kepada status setiap kad. */
-    const legacyDone=Math.min(Math.max(Number(s.done)||0,0),s.teams.length);
-    if(!s.perf.length){ s.perf=s.teams.map((id,i)=>{ if(!team(id))return 'next'; if(i<legacyDone)return 'off'; if(s.active&&i===legacyDone)return 'live'; return 'next'; }); }
-    while(s.perf.length<s.teams.length)s.perf.push('next');
-    if(s.perf.length>s.teams.length)s.perf=s.perf.slice(0,s.teams.length);
-    s.perf=s.perf.map((v,i)=>team(s.teams[i])&&['live','off','next'].includes(v)?v:'next');
-    s.done=s.teams.reduce((n,id,i)=>n+(team(id)&&s.perf[i]==='off'?1:0),0);
-    s.active=s.perf.some(v=>v==='live');
-    if(s.done>=s.teams.filter(id=>team(id)).length&&s.teams.filter(id=>team(id)).length)s.displayStatus='done';
-    else if(s.active)s.displayStatus='live'; else s.displayStatus='next';
-  }); return T.dance; }
-function homeDisplayObj(){
-  if(!T.homeDisplay||typeof T.homeDisplay!=='object')T.homeDisplay={activeMode:'battle',danceS1:false,danceS2:false,battle:true};
-  if(!['danceS1','danceS2','battle',''].includes(T.homeDisplay.activeMode))T.homeDisplay.activeMode='';
-  if(typeof T.homeDisplay.danceS1!=='boolean')T.homeDisplay.danceS1=false;
-  if(typeof T.homeDisplay.danceS2!=='boolean')T.homeDisplay.danceS2=false;
-  if(typeof T.homeDisplay.battle!=='boolean')T.homeDisplay.battle=true;
-  // Backward compatibility: convert old independent toggles to one active display.
-  if(!T.homeDisplay.activeMode){
-    if(T.homeDisplay.danceS1)T.homeDisplay.activeMode='danceS1';
-    else if(T.homeDisplay.danceS2)T.homeDisplay.activeMode='danceS2';
-    else if(T.homeDisplay.battle)T.homeDisplay.activeMode='battle';
-  }
-  const m=T.homeDisplay.activeMode;
-  T.homeDisplay.danceS1=m==='danceS1'; T.homeDisplay.danceS2=m==='danceS2'; T.homeDisplay.battle=m==='battle';
-  return T.homeDisplay;
-}
-function danceProgress(s){ danceObj(); const ids=(s&&Array.isArray(s.teams))?s.teams.filter(id=>team(id)):[]; const perf=(s&&Array.isArray(s.perf))?s.perf:[]; const done=ids.reduce((n,id)=>{const i=s.teams.indexOf(id);return n+(perf[i]==='off'?1:0)},0); const activeId=ids.find(id=>{const i=s.teams.indexOf(id);return perf[i]==='live'})||''; const nextId=ids.find(id=>{const i=s.teams.indexOf(id);return perf[i]==='next'})||''; const lastId=[...ids].reverse().find(id=>{const i=s.teams.indexOf(id);return perf[i]==='off'})||''; const active=!!activeId; const finished=ids.length>0&&done>=ids.length; const status=finished?'done':active?'live':'next'; return {ids,perf,done,active,activeId,nextId,lastId,total:ids.length,finished,status}; }
+function danceObj(){ if(!T.dance||!T.dance.s1)T.dance={title:'Tarian Kreatif Borneo',s1:{name:'Sesi 1',date:'',time:'',teams:[]},s2:{name:'Sesi 2',date:'',time:'',teams:[]}};
+  [T.dance.s1,T.dance.s2].forEach(s=>{ if(!Array.isArray(s.teams))s.teams=[]; }); return T.dance; }
 function danceUsed(){ const d=danceObj(); return new Set([...d.s1.teams,...d.s2.teams].filter(Boolean)); }
 function danceUndrawn(){ const u=danceUsed(); return T.teams.filter(t=>!u.has(t.id)); }
 function danceMark(t){ return t.logo?`<span class="dc-logo" style="background-image:url('${imgSrc(t.logo)}')"></span>`:`<span class="dc-logo dot" style="background:${t.color}"></span>`; }
@@ -4102,10 +3983,7 @@ function admDance(){
       <div class="field"><label>Sesi 2 — tarikh</label><input type="text" id="dS2d" value="${esc(d.s2.date||'')}" placeholder="26-09-2026 (Sabtu)"></div>
       <div class="field"><label>Sesi 2 — masa</label><input type="text" id="dS2t" value="${esc(d.s2.time||'')}" placeholder="7.00 Malam"></div>
     </div>
-    <div class="dance-reset-box">
-      <div class="dance-reset-copy"><b>RESET TETAPAN TARIAN</b><span>Kosongkan semua pasukan dalam Sesi 1 &amp; Sesi 2. Nama sesi, tarikh dan masa dikekalkan.</span></div>
-      <button class="btn danger sm" id="dClear">↺ KOSONGKAN SEMUA</button>
-    </div>
+    <div class="btn-row" style="margin:6px 0 4px"><button class="btn danger sm" id="dClear">↺ Reset semua pasukan</button></div>
     <div class="dc-manual">${danceManualCol(d.s1,'s1')}${danceManualCol(d.s2,'s2')}</div></div>`;
 }
 let _pickSess='s1',_pickIdx=0;
@@ -4133,84 +4011,7 @@ function bindDance(){
   c.querySelectorAll('[data-dclr]').forEach(b=>b.onclick=async()=>{ d[b.dataset.dclr].teams[+b.dataset.dci]=''; await save(); renderDance(); renderAdmin(); });
   c.querySelectorAll('[data-dadd]').forEach(b=>b.onclick=async()=>{ d[b.dataset.dadd].teams.push(''); await save(); renderAdmin(); });
   c.querySelectorAll('[data-drem]').forEach(b=>b.onclick=async()=>{ const s=d[b.dataset.drem]; if(s.teams.length>15){s.teams.pop(); await save(); renderDance(); renderAdmin();} else toast('Minimum 15 kedudukan',1); });
-  const cl=$('#dClear'); if(cl)cl.onclick=async()=>{ if(!confirm('Kosongkan semua kedudukan Tarian Kreatif Borneo untuk Sesi 1 dan Sesi 2? Nama sesi, tarikh dan masa tidak akan berubah.'))return; d.s1.teams=d.s1.teams.map(()=>''); d.s2.teams=d.s2.teams.map(()=>''); await save(); renderDance(); renderAdmin(); toast('Semua kedudukan tarian telah dikosongkan'); };
-}
-
-/* --- admin: paparan home --- */
-function homeDisplayChoice(mode,label,sub,active){
-  return `<button class="home-admin-choice ${active?'active':''}" data-home-choice="${mode}">
-    <span class="home-admin-choice-dot"></span>
-    <span class="home-admin-choice-body"><b>${label}</b><small>${sub}</small></span>
-    <span class="home-admin-choice-state">${active?'AKTIF':'PILIH'}</span>
-  </button>`;
-}
-function danceStatusButtons(sk){
-  const d=danceObj(), s=d[sk], p=danceProgress(s);
-  const cards=Array.from({length:15},(_,i)=>{
-    const id=s.teams[i]||'', t=team(id), st=t?(s.perf[i]||'next'):'next';
-    const name=t?tName(t):'BELUM DIUNDI';
-    const logo=t?tbadge(t):badge('#aaa','—');
-    const label=st==='live'?'SEDANG BUAT PERSEMBAHAN':st==='off'?'TAMAT PERSEMBAHAN':'PASUKAN SETERUSNYA';
-    return `<div class="dance-admin-card ${st}">
-      <div class="dance-admin-card-head"><span class="dance-admin-no">${String(i+1).padStart(2,'0')}</span>${logo}<div class="dance-admin-team"><b>${esc(name)}</b><small>${t?esc(tShort(t)):'Belum ditetapkan'}</small></div><span class="dance-admin-badge ${st}">${st==='live'?'LIVE':st==='off'?'OFF':'NEXT'}</span></div>
-      <div class="dance-admin-card-state">${label}</div>
-      <div class="dance-admin-card-actions">
-        <button class="dance-admin-action live ${st==='live'?'on':''}" data-perf-action="${sk}" data-perf-index="${i}" data-perf-status="live">● LIVE</button>
-        <button class="dance-admin-action off ${st==='off'?'on':''}" data-perf-action="${sk}" data-perf-index="${i}" data-perf-status="off">✓ OFF</button>
-      </div>
-    </div>`;
-  }).join('');
-  return `<div class="home-admin-performance">
-    <div class="home-admin-performance-head"><div><b>${esc(s.name||sk.toUpperCase())}</b><small>${p.done}/${p.total} selesai</small></div><span>${p.finished?'SEMUA SELESAI':p.activeId?'LIVE: '+esc(tName(team(p.activeId))):p.nextId?'NEXT: '+esc(tName(team(p.nextId))):'BELUM ADA PASUKAN'}</span></div>
-    <div class="dance-admin-grid">${cards}</div>
-  </div>`;
-}
-function admHomeDisplay(){
-  const d=danceObj(), hd=homeDisplayObj(), p1=danceProgress(d.s1), p2=danceProgress(d.s2);
-  return `<div class="panel home-admin-panel">
-    <h2>Paparan Home</h2>
-    <p class="hint">Semua paparan utama dikawal dari <b>satu tab</b>. Hanya <b>satu paparan</b> boleh aktif pada satu masa. Apabila satu dipilih, dua paparan lain akan automatik <b>OFF</b> dan tidak akan muncul di Home.</p>
-    <div class="home-admin-group-title">PILIH PAPARAN UTAMA</div>
-    ${homeDisplayChoice('danceS1','Tarian Kreatif Borneo — Sesi 1',`${p1.done}/${p1.total} selesai · ${esc(d.s1.time||'Masa belum ditetapkan')}`,hd.activeMode==='danceS1')}
-    ${danceStatusButtons('s1')}
-    ${homeDisplayChoice('danceS2','Tarian Kreatif Borneo — Sesi 2',`${p2.done}/${p2.total} selesai · ${esc(d.s2.time||'Masa belum ditetapkan')}`,hd.activeMode==='danceS2')}
-    ${danceStatusButtons('s2')}
-    ${homeDisplayChoice('battle','Tingkah Geruh — Battle','Paparan Next Match / Live Match di Home',hd.activeMode==='battle')}
-    <div class="home-admin-note">
-      <b>ATURAN PAPARAN</b>
-      <span>AKTIF = hanya paparan yang dipilih akan disiarkan di Home. LIVE = pasukan sedang membuat persembahan · OFF = tamat persembahan. Pasukan seterusnya ditentukan automatik.</span>
-    </div>
-  </div>`;
-}
-function bindHomeDisplay(){
-  const c=$('#tab-admin'), hd=homeDisplayObj(), d=danceObj();
-  c.querySelectorAll('[data-home-choice]').forEach(b=>b.onclick=async()=>{
-    const k=b.dataset.homeChoice;
-    hd.activeMode=k;
-    hd.danceS1=k==='danceS1'; hd.danceS2=k==='danceS2'; hd.battle=k==='battle';
-    await save(); renderAdmin(); renderPublic();
-    toast(k==='danceS1'?'Home: Tarian Kreatif Sesi 1 AKTIF':k==='danceS2'?'Home: Tarian Kreatif Sesi 2 AKTIF':'Home: Tingkah Geruh Battle AKTIF');
-  });
-  c.querySelectorAll('[data-perf-action]').forEach(b=>b.onclick=async()=>{
-    const sk=b.dataset.perfAction, i=Number(b.dataset.perfIndex), st=b.dataset.perfStatus, s=d[sk];
-    danceObj();
-    if(!team(s.teams[i])){ toast('Pasukan belum diundi pada slot ini',1); return; }
-    while(s.perf.length<s.teams.length)s.perf.push('next');
-    if(st==='live'){
-      /* Hanya satu pasukan boleh LIVE. Semua pasukan sebelum pilihan dianggap OFF; yang lain kekal NEXT. */
-      s.perf=s.perf.map((v,j)=>!team(s.teams[j])?'next':j<i?'off':j===i?'live':'next');
-    }else if(st==='off'){
-      s.perf[i]='off';
-      s.perf=s.perf.map((v,j)=>j!==i&&v==='live'?'next':v);
-      const first=s.teams.findIndex((id,j)=>team(id)&&s.perf[j]!=='off');
-      if(first>=0)s.perf[first]='next';
-    }
-    s.done=s.teams.reduce((n,id,j)=>n+(team(id)&&s.perf[j]==='off'?1:0),0);
-    s.active=s.perf.some(v=>v==='live');
-    s.displayStatus=s.done>=s.teams.filter(id=>team(id)).length&&s.teams.some(id=>team(id))?'done':s.active?'live':'next';
-    await save(); renderAdmin(); renderPublic();
-    toast(st==='live'?'LIVE: '+tName(team(s.teams[i])):st==='off'?'Tamat persembahan: '+tName(team(s.teams[i])):'NEXT: '+tName(team(s.teams[i])));
-  });
+  const cl=$('#dClear'); if(cl)cl.onclick=async()=>{ if(!confirm('Reset semua pasukan? (bilangan kedudukan dikekalkan)'))return; d.s1.teams=d.s1.teams.map(()=>''); d.s2.teams=d.s2.teams.map(()=>''); await save(); renderDance(); renderAdmin(); toast('Direset'); };
 }
 
 /* --- admin: anugerah --- */
@@ -4985,136 +4786,6 @@ function applyRemote(remote){
   .aw-total{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;margin-top:4px;border-top:1px solid rgba(216,177,90,.28)}
   .aw-total-l{font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-weight:700;font-size:12.5px;color:#f2e6c4}
   .aw-total-v{font-family:var(--mono);font-weight:800;font-size:17px;color:var(--gold3,#f0d487)}
-  /* ---------- HOME 2026 premium dashboard ---------- */
-  .home-event-hero{position:relative;overflow:hidden;background:
-    radial-gradient(500px 180px at 100% 0%,rgba(216,177,90,.22),transparent 70%),
-    linear-gradient(145deg,#17140e,#2b2111 62%,#17140e);
-    color:#f8efd9;border:1px solid rgba(216,177,90,.28);border-radius:20px;padding:22px 18px 20px;margin-bottom:14px;
-    box-shadow:0 12px 34px rgba(0,0,0,.16)}
-  .home-event-hero:after{content:"BAF";position:absolute;right:-8px;bottom:-28px;font-family:var(--mono);font-weight:800;font-size:110px;letter-spacing:-8px;color:rgba(216,177,90,.055);pointer-events:none}
-  .home-event-kicker{font-family:var(--display);font-size:10px;font-weight:700;letter-spacing:2px;color:#d8b15a;margin-bottom:5px}
-  .home-event-hero h1{position:relative;z-index:1;font-family:var(--display);font-size:31px;line-height:1;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:9px}
-  .home-event-meta{display:flex;align-items:center;gap:8px;font-family:var(--mono);font-size:10.5px;font-weight:700;color:#cbb98f;letter-spacing:.5px}
-  .home-event-status{position:absolute;z-index:2;right:14px;top:14px;display:inline-flex;align-items:center;gap:6px;border-radius:999px;padding:6px 9px;font-family:var(--display);font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase}
-  .home-event-status.upcoming{color:#e8d19a;background:rgba(216,177,90,.10);border:1px solid rgba(216,177,90,.25)}
-  .home-event-status.live{color:#fff;background:#a9781f;border:1px solid #d8b15a}
-  .home-status-dot{width:6px;height:6px;border-radius:50%;background:#d8b15a;box-shadow:0 0 0 3px rgba(216,177,90,.12)}
-  .home-event-status.live .home-status-dot{background:#fff;animation:homeLiveDot 1s ease-in-out infinite}
-  @keyframes homeLiveDot{50%{opacity:.25;transform:scale(.75)}}
-
-  .home-prize-card{margin-bottom:14px}
-  .home-prize-card .pool-sub b{font-weight:800}
-
-  .home-category-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2px}
-  .home-category-card{display:flex;align-items:center;gap:10px;min-width:0;background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:12px;
-    box-shadow:0 5px 18px rgba(24,16,32,.05);transition:.15s}
-  .home-category-card.battle{border-color:rgba(155,106,28,.28)}
-  .home-category-card.dance-focus{border-color:rgba(42,128,106,.28);box-shadow:0 5px 20px rgba(42,128,106,.06)}
-  .dance-home-wrap{background:var(--panel);border:1px solid var(--line);border-radius:17px;padding:13px;margin-bottom:4px;box-shadow:0 7px 22px rgba(24,16,32,.05)}
-  .dance-home-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:9px}
-  .dance-home-head>div{min-width:0}.dance-home-head .home-cat-k{display:block;margin-bottom:3px}.dance-home-head b{display:block;font-family:var(--display);font-size:14px;letter-spacing:.7px;text-transform:uppercase}
-  .dance-home-head>strong{font-family:var(--mono);font-size:22px;line-height:1;color:var(--txt);white-space:nowrap}.dance-home-head>strong small{font-size:11px;color:var(--muted)}
-  .dance-progress{height:6px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:11px}.dance-progress span{display:block;height:100%;background:linear-gradient(90deg,var(--mint),#d8b15a);border-radius:99px;transition:width .25s ease}
-  .dance-session-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.dance-session-grid:has(> :only-child){grid-template-columns:1fr}.dance-session-grid> .dance-session-card{width:100%;box-sizing:border-box}
-  .dance-session-card{border:1px solid var(--line);border-radius:14px;padding:11px;background:var(--panel-2,#fafafa);min-width:0}
-  .dance-session-card.is-live{border-color:rgba(42,128,106,.45);box-shadow:inset 0 0 0 1px rgba(42,128,106,.08)}
-  .dance-session-card.is-done{border-color:rgba(216,177,90,.35)}
-  .dance-session-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:7px}.dance-session-top b{font-family:var(--display);font-size:11px;letter-spacing:1px;text-transform:uppercase}.dance-session-top span{font-family:var(--mono);font-size:10px;font-weight:800;color:var(--muted)}
-  .dance-state{display:flex;align-items:center;gap:6px;font-family:var(--display);font-size:8.5px;letter-spacing:1px;font-weight:800;color:var(--muted);margin-bottom:8px;text-transform:uppercase}.dance-state i{width:6px;height:6px;border-radius:50%;background:#b5aa95;display:block}.dance-state.live{color:#277c68}.dance-state.live i{background:#277c68;box-shadow:0 0 0 3px rgba(39,124,104,.12);animation:homeLiveDot 1s ease-in-out infinite}.dance-state.done{color:#9b6a1c}.dance-state.done i{background:#d8b15a}
-  .dance-home-team{display:flex;align-items:center;gap:8px;min-width:0;padding:8px;border-radius:10px;background:rgba(255,255,255,.55);border:1px solid var(--line)}.dance-home-team .bdg{width:30px;height:30px}.dance-home-team-name{min-width:0}.dance-home-team-name b{display:block;font-size:11.5px;line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.dance-home-team-name span{display:block;color:var(--muted);font-family:var(--mono);font-size:8.5px;margin-top:2px}
-  .dance-home-team.empty{justify-content:center;min-height:46px;color:var(--muted)}.dance-home-team.empty>span{font-family:var(--mono);font-size:16px}.dance-home-team.empty b{font-size:10px}
-  .dance-completed,.dance-next-mini{margin-top:7px;padding-top:7px;border-top:1px dashed var(--line)}.dance-completed>span,.dance-next-mini>span{display:block;font-family:var(--display);font-size:7.5px;letter-spacing:1px;color:var(--muted);font-weight:800;margin-bottom:5px}.dance-completed .dance-home-team{opacity:.72}.dance-next-mini .dance-home-team{background:rgba(216,177,90,.06);border-color:rgba(216,177,90,.25)}
-  .dance-finished-banner{display:flex;align-items:center;gap:10px;margin-top:9px;padding:10px 11px;border-radius:12px;background:rgba(216,177,90,.08);border:1px solid rgba(216,177,90,.25)}.dance-finished-banner>span{width:30px;height:30px;display:grid;place-items:center;border-radius:50%;background:#d8b15a;color:#fff;font-weight:900}.dance-finished-banner b{display:block;font-family:var(--display);font-size:10px;letter-spacing:1px}.dance-finished-banner small{display:block;color:var(--muted);font-size:9.5px;margin-top:2px}
-  @media(max-width:520px){.dance-session-grid{grid-template-columns:1fr}.dance-home-wrap{padding:11px}.dance-session-card{padding:10px}}
-
-  .home-cat-icon{width:38px;height:38px;flex:none;display:grid;place-items:center;border-radius:11px;background:var(--mint-soft);color:var(--mint);font-size:18px;font-weight:800}
-  .home-category-card.battle .home-cat-icon{background:rgba(155,106,28,.10);color:#9b6a1c}
-  .home-cat-body{min-width:0;flex:1}
-  .home-cat-k{font-family:var(--display);font-size:8px;letter-spacing:1.2px;color:var(--muted);font-weight:700;margin-bottom:3px}
-  .home-cat-title{font-family:var(--display);font-size:14px;line-height:1.1;font-weight:700;letter-spacing:.3px;text-transform:uppercase}
-  .home-cat-sub{font-size:9.5px;color:var(--muted);font-weight:600;margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .home-cat-arrow{font-family:var(--mono);font-size:15px;color:var(--muted);flex:none}
-
-  .home-next-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:9px;margin-bottom:2px}
-  .home-next-top{display:flex;justify-content:space-between;align-items:center;padding:2px 4px 7px;font-family:var(--display);font-size:9px;letter-spacing:1px;text-transform:uppercase;color:var(--muted)}
-  .home-next-top b{font-family:var(--mono);color:var(--mint)}
-  .home-next-main .mcard{margin-bottom:0;box-shadow:none;border:0;padding:9px 4px 4px}
-
-  .home-live-empty{display:flex;align-items:center;gap:11px;background:var(--panel);border:1px dashed var(--line-2);border-radius:14px;padding:13px;margin-bottom:2px}
-  .home-live-icon{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--mint-soft);color:var(--mint);font-family:var(--mono);font-weight:800}
-  .home-live-empty b{display:block;font-size:12px}
-  .home-live-empty span{display:block;color:var(--muted);font-size:10.5px;margin-top:2px}
-
-  .home-info-card{background:var(--panel);border:1px solid var(--line);border-radius:15px;overflow:hidden;margin-bottom:10px}
-  .home-info-row{display:flex;align-items:center;gap:11px;padding:12px 14px}
-  .home-info-row+.home-info-row{border-top:1px solid var(--line)}
-  .home-info-ic{width:28px;height:28px;display:grid;place-items:center;flex:none;border-radius:9px;background:var(--mint-soft);color:var(--mint);font-family:var(--mono);font-weight:800}
-  .home-info-row small{display:block;font-family:var(--display);font-size:8.5px;letter-spacing:1px;color:var(--muted);font-weight:700;margin-bottom:2px}
-  .home-info-row b{display:block;font-size:12px;line-height:1.25}
-
-  @media(max-width:520px){
-    .home-event-hero{padding:20px 14px 17px}
-    .home-event-hero h1{font-size:27px}
-    .home-event-status{position:relative;right:auto;top:auto;width:max-content;margin-top:11px}
-  }
-  @media(max-width:440px){
-    .home-category-grid{grid-template-columns:1fr}
-    .home-cat-title{font-size:13px}
-  }
-
-  /* ---------- ADMIN: HOME DISPLAY CONTROLS ---------- */
-  .home-admin-group-title{font-family:var(--display);font-size:10px;letter-spacing:1.5px;color:var(--muted);font-weight:800;margin:4px 0 8px;text-transform:uppercase}
-  .home-admin-choice{width:100%;display:flex;align-items:center;gap:11px;text-align:left;padding:13px 14px;border:1px solid var(--line);border-radius:14px;background:var(--panel);margin-bottom:8px;cursor:pointer;transition:.15s}
-  .home-admin-choice:hover{border-color:var(--line-2)}
-  .home-admin-choice.active{border-color:rgba(42,128,106,.45);background:rgba(42,128,106,.06);box-shadow:0 0 0 1px rgba(42,128,106,.08) inset}
-  .home-admin-choice-dot{width:10px;height:10px;flex:none;border-radius:50%;background:#aaa39a;box-shadow:0 0 0 4px rgba(170,163,154,.08)}
-  .home-admin-choice.active .home-admin-choice-dot{background:#277c68;box-shadow:0 0 0 4px rgba(39,124,104,.12)}
-  .home-admin-choice-body{min-width:0;flex:1}.home-admin-choice-body b{display:block;font-family:var(--display);font-size:12px;letter-spacing:.5px;text-transform:uppercase}.home-admin-choice-body small{display:block;color:var(--muted);font-size:10px;margin-top:3px}
-  .home-admin-choice-state{flex:none;font-family:var(--mono);font-size:8px;font-weight:900;letter-spacing:.8px;color:var(--muted)}
-  .home-admin-choice.active .home-admin-choice-state{color:#277c68}
-  .home-admin-status{border:1px solid var(--line);border-radius:13px;padding:10px 11px;margin:-2px 0 11px;background:var(--panel-2,#fafafa)}
-  .home-admin-status-title{font-family:var(--display);font-size:8.5px;letter-spacing:1.2px;color:var(--muted);font-weight:800;text-transform:uppercase;margin-bottom:7px}
-  .home-admin-status-grid{display:grid;grid-template-columns:1fr 1.45fr 1fr;gap:6px}
-  .home-admin-status-btn.live-toggle.hidden-mode{border-color:rgba(0,0,0,.12);color:var(--muted);background:rgba(255,255,255,.72)}
-  .home-admin-status-btn.live-toggle.on.live{border-color:rgba(22,155,116,.35);color:#087a5c;background:rgba(22,155,116,.10)}
-  .home-admin-status-btn{border:1px solid var(--line-2);border-radius:9px;padding:9px 7px;background:var(--panel);font-family:var(--display);font-size:8.5px;font-weight:800;letter-spacing:.7px;color:var(--muted);cursor:pointer}
-  .home-admin-status-btn.live.on{background:rgba(42,128,106,.10);border-color:rgba(42,128,106,.4);color:#277c68}
-  .home-admin-status-btn.done.on{background:rgba(216,177,90,.12);border-color:rgba(155,106,28,.35);color:#9b6a1c}
-  .home-admin-status-btn.next.on{background:rgba(120,130,140,.10);border-color:var(--line-2);color:var(--txt)}
-  .home-admin-progress{display:flex;justify-content:space-between;gap:8px;margin-top:7px;font-family:var(--mono);font-size:8px;color:var(--muted);font-weight:700}
-  .home-admin-note{margin-top:12px;padding:11px 12px;border-radius:11px;background:rgba(216,177,90,.08);border:1px solid rgba(216,177,90,.2)}
-  .home-admin-note b{display:block;font-family:var(--display);font-size:9px;letter-spacing:1px;margin-bottom:3px}.home-admin-note span{display:block;color:var(--muted);font-size:9.5px;line-height:1.4}
-  @media(max-width:520px){.home-admin-status-grid{grid-template-columns:1fr}.home-admin-switch{min-width:70px}.home-admin-progress{flex-direction:column;gap:2px}}
-
-  /* ---------- ADMIN: 15 PERFORMANCE CARDS ---------- */
-  .home-admin-performance{border:1px solid var(--line);border-radius:14px;padding:11px;background:var(--panel-2,#fafafa);margin:-2px 0 12px}
-  .home-admin-performance-head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:10px;padding:2px 2px 7px;border-bottom:1px solid var(--line)}
-  .home-admin-performance-head b{display:block;font-family:var(--display);font-size:11px;letter-spacing:.8px;text-transform:uppercase}
-  .home-admin-performance-head small{display:block;color:var(--muted);font-family:var(--mono);font-size:8px;margin-top:3px}
-  .home-admin-performance-head>span{font-family:var(--mono);font-size:8px;font-weight:800;color:var(--muted);text-align:right;text-transform:uppercase}
-  .dance-admin-grid{display:grid;grid-template-columns:1fr;gap:7px}
-  .dance-admin-card{display:flex;align-items:center;gap:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:9px 10px;min-width:0;transition:.15s}
-  .dance-admin-card.live{border-color:rgba(22,155,116,.42);box-shadow:0 0 0 1px rgba(22,155,116,.08) inset;background:rgba(22,155,116,.035)}
-  .dance-admin-card.off{opacity:.78}
-  .dance-admin-card.next{border-color:rgba(216,177,90,.42);background:rgba(216,177,90,.045)}
-  .dance-admin-card-head{display:flex;align-items:center;gap:9px;min-width:0;flex:1}
-  .dance-admin-no{font-family:var(--mono);font-size:10px;font-weight:900;color:var(--muted);width:24px;flex:none;text-align:center}
-  .dance-admin-card-head .bdg{width:38px;height:38px;flex:none}
-  .dance-admin-team{min-width:0;flex:1}
-  .dance-admin-team b{display:block;font-family:var(--display);font-size:11.5px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
-  .dance-admin-team small{display:block;color:var(--muted);font-family:var(--mono);font-size:8px;margin-top:3px}
-  .dance-admin-badge{font-family:var(--mono);font-size:7.5px;font-weight:900;letter-spacing:.6px;padding:5px 7px;border-radius:999px;color:var(--muted);background:rgba(0,0,0,.04);flex:none;min-width:42px;text-align:center}
-  .dance-admin-badge.live{color:#087a5c;background:rgba(22,155,116,.10)}
-  .dance-admin-badge.off{color:#8c641e;background:rgba(216,177,90,.12)}
-  .dance-admin-badge.next{color:#765d2d;background:rgba(216,177,90,.16)}
-  .dance-admin-card-state{font-family:var(--display);font-size:7.5px;letter-spacing:.7px;color:var(--muted);margin:0;min-width:145px;text-transform:uppercase;white-space:nowrap}
-  .dance-admin-card-actions{display:grid;grid-template-columns:repeat(2,90px);gap:6px;flex:none}
-  .dance-admin-action{border:1px solid var(--line-2);border-radius:7px;background:var(--panel);padding:8px 5px;font-family:var(--display);font-size:7.5px;font-weight:900;letter-spacing:.4px;color:var(--muted);cursor:pointer;white-space:nowrap}
-  .dance-admin-action.live.on{color:#087a5c;border-color:rgba(22,155,116,.35);background:rgba(22,155,116,.10)}
-  .dance-admin-action.off.on{color:#8c641e;border-color:rgba(155,106,28,.35);background:rgba(216,177,90,.13)}
-  @media(max-width:700px){.dance-admin-card{gap:8px}.dance-admin-card-state{display:none}.dance-admin-card-actions{grid-template-columns:repeat(2,76px)}.dance-admin-card-head .bdg{width:34px;height:34px}.dance-admin-team b{font-size:10.5px}}
-  @media(max-width:520px){.home-admin-performance-head{align-items:flex-start;flex-direction:column}.home-admin-performance-head>span{text-align:left}.dance-admin-card{padding:8px}.dance-admin-no{width:20px}.dance-admin-card-actions{grid-template-columns:1fr 1fr;width:150px}.dance-admin-action{padding:8px 2px}}
-
   .pool-card{background:linear-gradient(135deg,#d8b15a,#a9781f);border-radius:18px;padding:16px 18px;margin-bottom:14px;text-align:center;box-shadow:0 10px 30px rgba(216,177,90,.22)}
   .pool-lbl{font-family:var(--display);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;font-size:12px;color:#2a2008;opacity:.85}
   .pool-v{font-family:var(--mono);font-weight:800;font-size:32px;color:#1a1305;line-height:1.1;margin:4px 0 8px}

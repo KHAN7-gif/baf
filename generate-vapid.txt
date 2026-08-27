@@ -1,0 +1,9 @@
+Jalankan pada komputer anda:
+
+npx web-push generate-vapid-keys
+
+Simpan:
+PUBLIC KEY  -> untuk webapp
+PRIVATE KEY -> Secret Manager sahaja
+
+JANGAN letakkan PRIVATE KEY dalam index.html, sw.js atau GitHub.

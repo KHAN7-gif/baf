@@ -3754,6 +3754,21 @@ async function emitLocalPush(payload){
     return false;
   }
 }
+async function testRemotePushNotification(){
+  const cfg=pushCfg();
+  if(!cfg.enabled) throw new Error('Push Notification belum diaktifkan.');
+  const payload={
+    title:'☁️ BAF 2026 · Remote Push',
+    body:'Ujian broadcast berjaya dihantar ke saluran Remote Push.',
+    type:'general',
+    category:'',
+    tag:`baf-remote-test-${Date.now()}`,
+    url:'./'
+  };
+  const id=await emitRemotePush(payload);
+  if(!id) throw new Error('Remote Push belum tersedia. Pastikan Firebase dan Cloud Function sudah diaktifkan.');
+  return id;
+}
 async function emitRemotePush(payload){
   try{
     if(window.__FB&&window.__FB.setPushEvent){
@@ -3938,11 +3953,26 @@ function pushPanelHTML(){
     <div class="btn-row" style="margin-top:14px">
       <button type="button" class="btn sm" id="pushEnableBtn">🔔 Aktifkan pada iPhone</button>
       <button type="button" class="btn ghost sm" id="pushTestBtn">Uji Notification</button>
+      <button type="button" class="btn ghost sm" id="remotePushTestBtn">☁️ Uji Broadcast</button>
+    </div>
+    <div id="remotePushStatus" class="home-admin-note" style="margin-top:10px">
+      ☁️ Remote Push: menyediakan broadcast kepada semua peranti yang sudah subscribe.
     </div>
     <div id="pushStatus" class="home-admin-note" style="margin-top:10px">
       ${supported?(('Notification' in window && Notification.permission==='granted')?'● Notification dibenarkan pada peranti ini.':'Peranti menyokong Push Notification.'):'Browser/peranti ini belum menyokong Push Notification.'}
     </div>
   </div>`;
+}
+function refreshRemotePushStatus(){
+  const el=$('#remotePushStatus');
+  if(!el)return;
+  const hasFb=!!(window.__FB&&window.__FB.setPushEvent);
+  const hasSub=!!(window.BAF_VAPID_PUBLIC_KEY);
+  el.textContent=hasFb
+    ? (hasSub
+      ? '☁️ Remote Push: Firebase + VAPID tersedia. Peranti ini boleh subscribe.'
+      : '☁️ Remote Push: Firebase tersedia, tetapi VAPID Public Key belum ditetapkan.')
+    : '☁️ Remote Push: Firebase belum bersedia.';
 }
 function bindPushPanel(){
   const c=$('#tab-admin'); if(!c)return;
@@ -3951,6 +3981,10 @@ function bindPushPanel(){
   c.querySelectorAll('[data-push-cfg]').forEach(el=>el.onchange=async()=>{cfg[el.dataset.pushCfg]=el.checked;await save();});
   const eb=$('#pushEnableBtn'); if(eb)eb.onclick=async()=>{try{await registerPushDevice();const s=$('#pushStatus');if(s)s.textContent='● Notification aktif pada peranti ini.';toast('Push Notification diaktifkan');}catch(e){toast(e.message||'Gagal mengaktifkan notification',1);}};
   const tb=$('#pushTestBtn'); if(tb)tb.onclick=async()=>{try{await testPushNotification();toast('Ujian notification dihantar');}catch(e){toast(e.message||'Ujian gagal',1);}};
+  const rb=$('#remotePushTestBtn'); if(rb)rb.onclick=async()=>{
+    try{await testRemotePushNotification();toast('Ujian Remote Broadcast dihantar');}
+    catch(e){toast(e.message||'Remote Broadcast gagal',1);}
+  };
   c.querySelectorAll('[data-push-soon]').forEach(b=>b.onclick=async()=>{
     try{
       const mode=b.dataset.pushSoon;
@@ -3958,6 +3992,7 @@ function bindPushPanel(){
       toast(ok?'Notification “Akan Bermula” dihantar':'Notification tidak dapat dihantar',!ok);
     }catch(e){toast(e.message||'Gagal menghantar notification',1);}
   });
+  refreshRemotePushStatus();
 }
 
 /* ---------- admin ---------- */

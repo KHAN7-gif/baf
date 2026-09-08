@@ -626,8 +626,8 @@
   .ov-cv{font-family:var(--mono);font-weight:800;font-size:2.1vh;opacity:.92}
   /* OBS overlay — carta bracket penuh (?overlay=bracket) */
   body.overlay-bracket-mode{overflow:auto}
-  #obvScreen{position:relative;z-index:200;min-height:100vh;padding:16px 10px}
-  .obv-title{font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-weight:700;font-size:22px;margin:2px 4px 14px;text-align:center}
+  #obvScreen{position:relative;z-index:200;min-height:100vh;padding:76px 10px 16px}
+  .obv-title{position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:210;width:max-content;max-width:calc(100vw - 32px);font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-weight:700;font-size:22px;margin:0;text-align:center;pointer-events:none}
   .ab-logo{width:72px;height:72px;border-radius:18px;margin:0 auto 10px;background-size:cover;background-position:center;box-shadow:0 6px 20px rgba(0,0,0,.15);display:grid;place-items:center}
   .ab-logo.emoji{font-size:38px;background:var(--panel-2)}
   .obs-logo{display:inline-block;width:24px;height:24px;border-radius:6px;background-size:cover;background-position:center;vertical-align:middle;margin-right:8px}

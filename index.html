@@ -4030,18 +4030,23 @@ function renderJudgePage(idx){
   const wrap=document.querySelector('.wrap'); if(wrap)wrap.style.display='none';
   let s=document.getElementById('judgeScreen');
   if(!s){ s=document.createElement('div'); s.id='judgeScreen'; document.body.appendChild(s); }
-  const L=liveLabels(), j=liveJudges()[idx], active=j.active;
+  const L=liveLabels(), j=liveJudges()[idx], active=j.active, canVote=active&&!j.vote;
   s.innerHTML=`<div class="jp">
     <div class="jp-tag">Undi Juri ${idx+1}</div>
     <div class="jp-name">${esc(j.name)}</div>
-    <div class="jp-sub">${active?'Ketuk undi anda':'⏳ Menunggu admin membuka undian…'}</div>
+    <div class="jp-sub">${j.vote?'Pilihan anda telah dihantar':(active?'Ketuk pilihan anda sekali sahaja':'⏳ Menunggu admin membuka undian…')}</div>
     <div class="jp-btns">
-      <button class="jp-btn red${j.vote==='red'?' on':''}" data-v="red"${active?'':' disabled'}>${judgeSideHTML('r')}</button>
-      <button class="jp-btn green${j.vote==='green'?' on':''}" data-v="green"${active?'':' disabled'}>${judgeSideHTML('y')}</button>
+      <button class="jp-btn red${j.vote==='red'?' on':''}" data-v="red"${canVote?'':' disabled'}>${judgeSideHTML('r')}</button>
+      <button class="jp-btn green${j.vote==='green'?' on':''}" data-v="green"${canVote?'':' disabled'}>${judgeSideHTML('y')}</button>
     </div>
     <div class="jp-status">${j.vote?('✔ Undi anda: '+esc(j.vote==='red'?L.red:L.green)):'Belum mengundi'}</div>
   </div>`;
-  s.querySelectorAll('.jp-btn[data-v]').forEach(b=>b.onclick=async()=>{ if(!liveJudges()[idx].active)return; await liveSet({['v'+idx]:b.dataset.v}); renderJudgePage(idx); });
+  s.querySelectorAll('.jp-btn[data-v]').forEach(b=>b.onclick=async()=>{
+    const current=liveJudges()[idx];
+    if(!current.active||current.vote)return;
+    await liveSet({['v'+idx]:b.dataset.v});
+    renderJudgePage(idx);
+  });
 }
 function onLiveUpdate(){
   if(_overlay==='vote'){ renderVoteOverlay(); return; }

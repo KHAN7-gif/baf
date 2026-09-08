@@ -601,7 +601,7 @@
   .jp-status{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--txt);margin-top:2px}
   @media(max-width:520px){ .jp-name{font-size:24px} .jp-btn{font-size:19px;min-height:34vh;gap:10px} .jp-tn{font-size:17px} .jp-logo{width:52px;height:52px} .jp-flag{width:42px;height:30px} }
   /* OBS overlay (transparent) — ?overlay=vote */
-  body.overlay-mode{background:transparent!important}
+  html.overlay-mode,body.overlay-mode{background:transparent!important;background-image:none!important}
   body.overlay-mode::before{display:none!important}
   #overlayScreen{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:3vh 2.5vw}
   .ov-wrap{width:100%;max-width:1500px;display:flex;flex-direction:column;gap:2.5vh}
@@ -4065,6 +4065,7 @@ function ovSideHTML(side){
   return `<div class="ov-team">${(mk||fl)?`<span class="ov-mark">${mk}${fl}</span>`:''}<span class="ov-tn">${esc(name)}</span></div>`;
 }
 function renderVoteOverlay(){
+  document.documentElement.classList.add('overlay-mode');
   document.body.classList.add('overlay-mode');
   const tb=document.querySelector('.topbar'); if(tb)tb.style.display='none';
   const tabs=document.getElementById('tabs'); if(tabs)tabs.style.display='none';

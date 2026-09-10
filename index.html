@@ -5069,6 +5069,12 @@ function applyRemote(remote){
     body:not(.admin-mode) #subnav,
     body:not(.admin-mode) #subnav2{max-width:1120px!important;margin-left:auto!important;margin-right:auto!important}
   }
+  /* Public mobile/tablet screens do not expose admin entry points. */
+  @media (max-width:1199px){
+    body:not(.admin-mode) #adminBtn,
+    body:not(.admin-mode) .about-admin-link,
+    body:not(.admin-mode) #bafMobilePanel .baf-menu-auth{display:none!important}
+  }
   /* ===== ADMIN DESKTOP: sidebar semua tab ===== */
   #deskSidebar{display:none}
   body.desk-admin #deskSidebar{

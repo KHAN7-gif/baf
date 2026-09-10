@@ -654,6 +654,8 @@
   .aw-ed-l{display:flex;align-items:center;gap:9px;margin-bottom:7px}
   .aw-ed .aw-nm{font-size:13px}
   .aw-sel{width:100%;padding:9px 8px;font-size:13px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--txt)}
+  .aw-name-input{width:100%;padding:9px 10px;font-size:13px;background:var(--panel);border:1px solid var(--line-2);border-radius:8px;color:var(--txt)}
+  .aw-name-input::placeholder{color:var(--muted)}
   /* team detail awards */
   .td-awards{display:flex;flex-direction:column;gap:7px;margin-bottom:10px}
   .td-profile{display:flex;flex-direction:column;gap:14px}
@@ -3268,10 +3270,10 @@ function teamResultBadges(tid){
   return b?`<span class="tw-res">${b}</span>`:'';
 }
 function awardTableHTML(c){ const A=AWARDS[c];
-  const rowsFor=(list,numbered)=>list.map((it,i)=>{ const w=awardWinner(it[0]); const ic=numbered?(i+1):'★';
+  const rowsFor=(list,numbered)=>list.map((it,i)=>{ const w=awardWinner(it[0]), raw=awardsObj()[it[0]], named=raw&&!w&&!team(raw)?String(raw):''; const ic=numbered?(i+1):'★';
     const tier=numbered?String(it[1]||'').toLowerCase():'special';
     return `<div class="srow award-row award-${tier}"><span class="pos">${ic}</span>${w?tbadge(w):badge('#d8d5de','-')}
-      <span class="tn">${w?flagImg(w)+esc(tName(w)):'<span style="color:var(--muted)">— Belum ditentukan</span>'}</span>
+      <span class="tn">${w?flagImg(w)+esc(tName(w)):named?esc(named):'<span style="color:var(--muted)">— Belum ditentukan</span>'}</span>
       <span class="aw-right"><span class="aw-rlabel">${esc(it[1])}</span><span class="aw-rprize">${fmtRM(prizeOf(it[0],it[2]))}</span></span></div>`; }).join('');
   return `<div class="gcard award-table award-${c}"><div class="ghead"><h3>${esc(A.title)}</h3><span class="fx-gn">${A.placement.length} KEDUDUKAN</span></div>
     <div class="aw-grouph">Kedudukan &amp; Hadiah</div>${rowsFor(A.placement,true)}
@@ -4376,12 +4378,16 @@ function bindHomeDisplay(){
 function teamOptsAward(sel){ return `<option value="">— Belum dipilih —</option>`+T.teams.map(t=>`<option value="${t.id}"${t.id===sel?' selected':''}>${esc(tName(t))}</option>`).join(''); }
 function admAwards(){
   const a=awardsObj();
-  let h=`<div class="panel"><h2>Anugerah</h2><p class="hint">Pilih pasukan pemenang bagi setiap anugerah. Ia muncul automatik di <b>detail pasukan</b> dan tab <b>Home</b>. Kedudukan Tingkah Geruh (Titanium/Platinum/Gold/Silver) diisi <b>automatik</b> dari carta Kalah Mati.<br><b style="color:var(--gold3,#f0d487)">💰 Jumlah hadiah (RM) boleh diedit</b> — taip nilai baharu, ia disimpan automatik.</p></div>`;
+  let h=`<div class="panel"><h2>Anugerah</h2><p class="hint">Pilih pasukan pemenang bagi setiap anugerah. Untuk <b>Peningkah Lelaki Terbaik</b> dan <b>Peningkah Perempuan Terbaik</b>, taip nama penari secara manual. Ia muncul automatik di <b>detail pasukan</b> dan tab <b>Home</b>. Kedudukan Tingkah Geruh (Titanium/Platinum/Gold/Silver) diisi <b>automatik</b> dari carta Kalah Mati.<br><b style="color:var(--gold3,#f0d487)">💰 Jumlah hadiah (RM) boleh diedit</b> — taip nilai baharu, ia disimpan automatik.</p></div>`;
   ['tarian','battle'].forEach(c=>{ const A=AWARDS[c];
     h+=`<div class="panel"><h2>${esc(A.title)}</h2>`;
     const block=(list,label,numbered)=>{ h+=`<div class="aw-grouph">${label}</div>`;
       list.forEach((it,i)=>{ const auto=!!AUTO_AW[it[0]], w=auto?awardWinner(it[0]):null;
-        const ctrl=auto?`<div class="aw-auto">${w?flagImg(w)+esc(tName(w)):'<span style="color:var(--muted)">Auto ikut carta Kalah Mati</span>'}</div>`:`<select class="aw-sel" data-aw="${it[0]}">${teamOptsAward(a[it[0]]||'')}</select>`;
+        const ctrl=auto
+          ? `<div class="aw-auto">${w?flagImg(w)+esc(tName(w)):'<span style="color:var(--muted)">Auto ikut carta Kalah Mati</span>'}</div>`
+          : (c==='battle'&&['bx1','bx2'].includes(it[0]))
+            ? `<input class="aw-name-input" type="text" data-aw-name="${it[0]}" value="${esc(a[it[0]]||'')}" placeholder="Nama penari pemenang">`
+            : `<select class="aw-sel" data-aw="${it[0]}">${teamOptsAward(a[it[0]]||'')}</select>`;
         h+=`<div class="aw-ed"><div class="aw-ed-l"><span class="aw-no">${numbered?(i+1):'★'}</span><span class="aw-nm">${esc(it[1])}</span><span class="aw-prize aw-prize-ed">RM <input type="number" class="prize-in" data-prize="${it[0]}" value="${prizeOf(it[0],it[2])}" min="0" step="100" inputmode="numeric"></span></div>${ctrl}</div>`; }); };
     block(A.placement,'Kedudukan & Hadiah',true);
     block(A.special,'Anugerah Khas',false);
@@ -4392,6 +4398,7 @@ function admAwards(){
 function bindAwards(){
   const c=$('#tab-admin');
   c.querySelectorAll('.aw-sel[data-aw]').forEach(sel=>sel.onchange=async()=>{ const a=awardsObj(); if(sel.value)a[sel.dataset.aw]=sel.value; else delete a[sel.dataset.aw]; await save(); renderPublic(); });
+  c.querySelectorAll('.aw-name-input[data-aw-name]').forEach(inp=>inp.onchange=async()=>{ const a=awardsObj(), value=inp.value.trim(); if(value)a[inp.dataset.awName]=value; else delete a[inp.dataset.awName]; await save(); renderPublic(); toast('Nama penari dikemas kini'); });
   c.querySelectorAll('.prize-in[data-prize]').forEach(inp=>inp.onchange=async()=>{ const p=prizesObj(), id=inp.dataset.prize, v=inp.value.trim();
     if(v==='')delete p[id]; else p[id]=Math.max(0,Number(v)||0);
     await save(); renderPublic(); toast('Hadiah dikemas kini'); });

@@ -733,6 +733,16 @@
   .pk-logo.dot{box-shadow:inset 0 0 0 2px rgba(255,255,255,.4)}
   .pk-flag{width:28px;height:20px;object-fit:cover;border-radius:3px;box-shadow:0 0 0 1px var(--line);flex:none}
   .pk-nm{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .dance-admin-editor .field label,
+  .dance-admin-editor .dcm-h,
+  .dance-admin-editor .dcm-no,
+  .dance-admin-editor .dance-reset-copy span,
+  .dance-admin-editor .dsl-nm,
+  .dance-admin-editor .dsl-empty{color:#3b3021!important}
+  .dance-admin-editor .field input,
+  .dance-admin-editor .dsl{color:#2b241b!important}
+  .dance-admin-editor .field input::placeholder{color:#8b7657!important}
+  .dance-admin-editor .dcm-col{color:#2b241b}
   @media(max-width:520px){ .dc-manual{grid-template-columns:1fr} }
   .draw-card{text-align:center;max-width:360px}
   .dr-sess{font-family:var(--display);text-transform:uppercase;letter-spacing:1px;font-weight:700;font-size:14px;color:var(--mint);margin-bottom:12px}
@@ -4237,7 +4247,7 @@ function danceManualCol(s,sk){
 }
 function admDance(){
   const d=danceObj();
-  return `<div class="panel"><h2>Undian Tarian Kreatif</h2>
+  return `<div class="panel dance-admin-editor"><h2>Undian Tarian Kreatif</h2>
     <p class="hint">Susun peserta secara <b>manual</b>. Ketuk mana-mana kedudukan untuk pilih pasukan (senarai keluar sebagai pop-up). ✕ buang, ➕/➖ tambah atau kurang kedudukan. Paparan di tab <b>Undian Tarian Kreatif</b> (view).</p>
     <div class="field"><label>Tajuk</label><input type="text" id="dTitle" value="${esc(d.title||'')}"></div>
     <div class="dc-sess-ed">

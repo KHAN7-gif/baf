@@ -1188,14 +1188,8 @@ tr:hover td{background:rgba(216,177,90,.035)!important}
   color:#a99670!important;
   font-family:var(--mono)!important;
 }
-#tab-teams .team-tools{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 190px;
-  gap:9px;
-  margin-bottom:10px;
-}
-#tab-teams .team-search,
-#tab-teams .team-filter{
+#tab-teams .team-tools{margin-bottom:10px}
+#tab-teams .team-search{
   width:100%;
   min-height:42px;
   padding:10px 13px;
@@ -1207,27 +1201,6 @@ tr:hover td{background:rgba(216,177,90,.035)!important}
   font-size:12px;
 }
 #tab-teams .team-search::placeholder{color:#95886e}
-#tab-teams .team-summary{
-  display:flex;
-  gap:7px;
-  overflow-x:auto;
-  padding:1px 1px 10px;
-  scrollbar-width:none;
-}
-#tab-teams .team-summary::-webkit-scrollbar{display:none}
-#tab-teams .team-summary-item{
-  flex:none;
-  padding:7px 10px;
-  border:1px solid rgba(216,177,90,.22);
-  border-radius:10px;
-  background:rgba(216,177,90,.07);
-  color:#b9a986;
-  font-family:var(--mono);
-  font-size:10px;
-  font-weight:700;
-  white-space:nowrap;
-}
-#tab-teams .team-summary-item b{color:#f0d487}
 #tab-teams .team-empty{padding:28px 12px;text-align:center;color:#a99b7c;font-size:13px}
 #tab-teams .srow{
   min-height:60px;
@@ -1332,7 +1305,6 @@ tr:hover td{background:rgba(216,177,90,.035)!important}
   color:#d8b15a!important;
 }
 @media(max-width:520px){
-  #tab-teams .team-tools{grid-template-columns:1fr;gap:7px}
   #tab-teams .gcard{border-radius:18px!important}
   #tab-teams .ghead{padding:0 14px!important}
   #tab-teams .srow{min-height:57px;padding:9px 13px!important}
@@ -3454,19 +3426,15 @@ function renderHome(){
 }
 
 /* ---------- render: PASUKAN ---------- */
-let teamQuery='', teamState='all';
+let teamQuery='';
 function renderTeams(){
   const host=$('#tab-teams'); if(!host)return;
-  const states=[...new Set(T.teams.map(t=>t.flagName).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
   const q=teamQuery.trim().toLowerCase();
   const filtered=T.teams.filter(t=>{
     const text=[tName(t),tShort(t),t.flagName||''].join(' ').toLowerCase();
-    return (!q||text.includes(q))&&(teamState==='all'||(t.flagName||'')===teamState);
+    return !q||text.includes(q);
   });
-  const stateCounts={}; T.teams.forEach(t=>{const s=t.flagName||'Belum ditetapkan';stateCounts[s]=(stateCounts[s]||0)+1;});
-  const summary=Object.entries(stateCounts).sort((a,b)=>a[0].localeCompare(b[0])).map(([s,n])=>`<span class="team-summary-item">${esc(s)} <b>${n}</b></span>`).join('');
-  let h=`<div class="team-tools"><input class="team-search" id="teamSearch" type="search" value="${esc(teamQuery)}" placeholder="Cari nama pasukan atau nick ID..." aria-label="Cari pasukan"><select class="team-filter" id="teamState"><option value="all">Semua negeri · ${T.teams.length}</option>${states.map(s=>`<option value="${esc(s)}"${teamState===s?' selected':''}>${esc(s)} · ${stateCounts[s]}</option>`).join('')}</select></div>`;
-  h+=`<div class="team-summary">${summary}</div>`;
+  let h=`<div class="team-tools"><input class="team-search" id="teamSearch" type="search" value="${esc(teamQuery)}" placeholder="Cari nama pasukan atau nick ID..." aria-label="Cari pasukan"></div>`;
   h+=`<div class="gcard"><div class="ghead"><h3>Pasukan · ${filtered.length}/${T.teams.length}</h3><span class="fx-gn">ketuk untuk detail</span></div>`;
   filtered.forEach(t=>{ const i=T.teams.indexOf(t), na=(t.ach||[]).length;
     h+=`<div class="srow tap" data-tdet="${t.id}"><span class="pos">${i+1}</span>
@@ -3479,7 +3447,6 @@ function renderTeams(){
   if(!T.teams.length)h+=`<div class="empty">Belum ada pasukan.</div>`;
   host.innerHTML=h;
   const search=$('#teamSearch'); if(search)search.oninput=()=>{teamQuery=search.value;renderTeams();const next=$('#teamSearch');if(next){next.focus();next.setSelectionRange(teamQuery.length,teamQuery.length);}};
-  const filter=$('#teamState'); if(filter)filter.onchange=()=>{teamState=filter.value;renderTeams();};
   host.querySelectorAll('[data-tdet]').forEach(el=>el.onclick=()=>openTeamDetail(el.dataset.tdet));
 }
 /* team detail modal (+ achievements) */

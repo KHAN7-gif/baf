@@ -3269,10 +3269,11 @@ function teamResultBadges(tid){
 }
 function awardTableHTML(c){ const A=AWARDS[c];
   const rowsFor=(list,numbered)=>list.map((it,i)=>{ const w=awardWinner(it[0]); const ic=numbered?(i+1):'★';
-    return `<div class="srow"><span class="pos">${ic}</span>${w?tbadge(w):badge('#d8d5de','-')}
+    const tier=numbered?String(it[1]||'').toLowerCase():'special';
+    return `<div class="srow award-row award-${tier}"><span class="pos">${ic}</span>${w?tbadge(w):badge('#d8d5de','-')}
       <span class="tn">${w?flagImg(w)+esc(tName(w)):'<span style="color:var(--muted)">— Belum ditentukan</span>'}</span>
       <span class="aw-right"><span class="aw-rlabel">${esc(it[1])}</span><span class="aw-rprize">${fmtRM(prizeOf(it[0],it[2]))}</span></span></div>`; }).join('');
-  return `<div class="gcard"><div class="ghead"><h3>${esc(A.title)}</h3></div>
+  return `<div class="gcard award-table award-${c}"><div class="ghead"><h3>${esc(A.title)}</h3><span class="fx-gn">${A.placement.length} KEDUDUKAN</span></div>
     <div class="aw-grouph">Kedudukan &amp; Hadiah</div>${rowsFor(A.placement,true)}
     <div class="aw-grouph">Anugerah Khas</div>${rowsFor(A.special,false)}
     <div class="aw-total"><span class="aw-total-l">💰 Jumlah Hadiah</span><span class="aw-total-v">${fmtRM(prizeTotal(c))}</span></div></div>`;
@@ -5305,6 +5306,37 @@ function applyRemote(remote){
   .dance-admin-action.off.on{color:#8c641e!important}
   .home-admin-note b{font-size:11px!important;color:#e2c36f!important}
   .home-admin-note span{font-size:12px!important;color:#c7b895!important;line-height:1.5}
+
+  /* Championship ranking treatment for public results */
+  .award-table .ghead{padding:16px 18px 14px!important;min-height:62px}
+  .award-table .ghead h3{font-size:17px!important;color:#f2d991!important}
+  .award-table .ghead .fx-gn{font-size:10px;color:#a99b7e}
+  .award-table .aw-grouph{font-size:12px;color:#e2c36f;margin:14px 6px 7px}
+  .award-table .award-row{min-height:64px;padding:11px 18px!important;gap:12px;border-left:3px solid transparent!important;transition:.15s}
+  .award-table .award-row:hover{background:rgba(216,177,90,.07)!important;border-left-color:#d8b15a!important}
+  .award-table .award-row .pos{font-size:14px;color:#c7b58f;width:22px}
+  .award-table .award-row .tn{font-size:14px;color:#f5eedc}
+  .award-table .award-row .tn .flag{width:22px;height:15px}
+  .award-table .award-row .aw-rlabel{font-size:11px;color:#c7b58f}
+  .award-table .award-row .aw-rprize{font-size:13px;color:#f2d991}
+  .award-table .award-row.award-titanium{border-left-color:#f0d487!important;background:linear-gradient(90deg,rgba(240,212,135,.10),transparent 45%)!important}
+  .award-table .award-row.award-platinum{border-left-color:#c4d0dc!important}
+  .award-table .award-row.award-gold{border-left-color:#e6c34a!important}
+  .award-table .award-row.award-silver{border-left-color:#aeb8c4!important}
+  .award-table .award-row.award-special{min-height:58px}
+  .award-table .award-row.award-special .pos{color:#e2c36f}
+  .award-table .award-row.award-special .aw-rlabel{color:#d2bd8d}
+  .award-table .aw-total{margin-top:8px;padding:17px 18px;border-top-color:rgba(216,177,90,.38)}
+  .award-table .aw-total-l{font-size:14px;color:#f2e6c4}
+  .award-table .aw-total-v{font-size:20px;color:#f2d991}
+  @media(max-width:520px){
+    .award-table .ghead{padding:14px!important}
+    .award-table .ghead h3{font-size:15px!important}
+    .award-table .award-row{padding:10px 12px!important;gap:8px}
+    .award-table .award-row .tn{font-size:12.5px}
+    .award-table .award-row .aw-rlabel{font-size:9px}
+    .award-table .award-row .aw-rprize{font-size:11px}
+  }
 
   .pool-card{background:linear-gradient(135deg,#d8b15a,#a9781f);border-radius:18px;padding:16px 18px;margin-bottom:14px;text-align:center;box-shadow:0 10px 30px rgba(216,177,90,.22)}
   .pool-lbl{font-family:var(--display);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;font-size:12px;color:#2a2008;opacity:.85}

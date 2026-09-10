@@ -3893,11 +3893,25 @@ function printReport(resultsOnly){
   const battleRows=(T.ko||[]).filter(m=>m.round!=='TP'&&matchDone(m)&&isReal(m.top)&&isReal(m.bot));
   const title=resultsOnly?'Keputusan Undian & Pertandingan':'Laporan Borneo Arts Festival 2026';
   const section=(name,table)=>`<h2 class="report-section-title">${name}</h2>${table}`;
+  const printAwardPage=(comp)=>{
+    const A=AWARDS[comp], a=awardsObj();
+    const logoFor=t=>t&&t.logo?` style="background-image:url('${imgSrc(t.logo)}')"`:'';
+    const awardRow=(it,i,special)=>{
+      const raw=a[it[0]], w=awardWinner(it[0]), individual=a[it[0]+'Name']||(raw&&!team(raw)?String(raw):'');
+      const selectedTeam=team(raw), label=w?reportTeamName(w):selectedTeam?reportTeamName(selectedTeam):individual||'Belum ditentukan';
+      const displayName=w?`${label}${individual?` · ${individual}`:''}`:label;
+      const t=w||selectedTeam;
+      return `<div class="print-award-row${special?' special':''}"><span class="print-award-no">${special?'★':i+1}</span><span class="print-award-logo"${logoFor(t)}></span>${t&&t.flag?`<img class="print-award-flag" src="${imgSrc(t.flag)}" alt="">`:'<span class="print-award-flag"></span>'}<span class="print-award-name">${esc(displayName)}</span><span class="print-award-prize"><span>${esc(it[1])}</span>${fmtRM(prizeOf(it[0],it[2]))}</span></div>`;
+    };
+    const placement=A.placement.map((it,i)=>awardRow(it,i,false)).join('');
+    const special=A.special.map((it,i)=>awardRow(it,i,true)).join('');
+    return `<div class="print-page"><h1>Keputusan Keseluruhan ${esc(A.title)}</h1><p class="print-meta">${esc(T.name||'Borneo Arts Festival 2026')} · Dijana ${new Date().toLocaleString('ms-MY')}</p><div class="print-award-card"><div class="print-award-head"><h2>${esc(A.title)}</h2><span>${A.placement.length} KEDUDUKAN</span></div><div class="print-group">Kedudukan &amp; Hadiah</div>${placement}<div class="print-group">Anugerah Khas</div>${special}<div class="print-total"><span>Jumlah Hadiah</span><strong>${fmtRM(prizeTotal(comp))}</strong></div></div></div>`;
+  };
   const stateTable=`<table class="report-table"><thead><tr><th>Negeri</th><th>Jumlah Pasukan</th></tr></thead><tbody>${states.map(([s,n])=>`<tr><td>${esc(s)}</td><td>${n}</td></tr>`).join('')}</tbody></table>`;
   const danceSessionHTML=(s,label)=>{ let rows=''; for(let i=0;i<Math.max(15,s.teams.length);i++){ const t=team(s.teams[i]||''), logo=t&&t.logo?` style="background-image:url('${imgSrc(t.logo)}')"`:''; const flag=t&&t.flag?`<img class="report-dance-flag" src="${imgSrc(t.flag)}" alt="">`:'<span class="report-dance-flag"></span>'; rows+=`<div class="report-dance-row"><span class="report-dance-no">${i+1}</span>${t?`<span class="report-dance-logo"${logo}></span>`:'<span class="report-dance-logo"></span>'}${flag}<span class="report-dance-name">${t?esc(tName(t)):'— Pilih pasukan —'}</span></div>`; } return `<div class="report-dance-session"><div class="report-dance-head">${esc(label)} · Susun Peserta (${s.teams.length})</div>${rows}</div>`; };
   const danceTable=`<div class="report-dance-grid">${danceSessionHTML(d.s1,'Sesi 1')}${danceSessionHTML(d.s2,'Sesi 2')}</div>`;
   const battleTable=`<table class="report-table"><thead><tr><th>Perlawanan</th><th>Atas</th><th>Skor</th><th>Bawah</th><th>Menang</th></tr></thead><tbody>${battleRows.map(m=>`<tr><td>${esc(koNo(m))}</td><td>${esc(reportTeamName(m.top))}</td><td>${m.ts??'—'} - ${m.bs??'—'}</td><td>${esc(reportTeamName(m.bot))}</td><td>${esc(reportTeamName(reportWinner(m)))}</td></tr>`).join('')||'<tr><td colspan="5">Belum ada keputusan selesai</td></tr>'}</tbody></table>`;
-  const el=document.createElement('div'); el.id='printReport'; el.innerHTML=`<h1>${esc(title)}</h1><p>${esc(T.name||'Borneo Arts Festival 2026')} · Dijana ${new Date().toLocaleString('ms-MY')}</p>${resultsOnly?section('Keputusan Undian Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable):section('Analisis Penyertaan Mengikut Negeri',stateTable)+section('Peserta Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable)}`; document.body.appendChild(el); window.addEventListener('afterprint',()=>el.remove(),{once:true}); window.print();
+  const el=document.createElement('div'); el.id='printReport'; el.className=resultsOnly?'results-only':''; el.innerHTML=resultsOnly?printAwardPage('tarian')+printAwardPage('battle'):`<h1>${esc(title)}</h1><p>${esc(T.name||'Borneo Arts Festival 2026')} · Dijana ${new Date().toLocaleString('ms-MY')}</p>${section('Analisis Penyertaan Mengikut Negeri',stateTable)+section('Peserta Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable)}`; document.body.appendChild(el); window.addEventListener('afterprint',()=>el.remove(),{once:true}); window.print();
 }
 function bindReports(){ const p=$('#printReportBtn'), r=$('#printResultsBtn'); if(p)p.onclick=()=>printReport(false); if(r)r.onclick=()=>printReport(true); }
 
@@ -5452,6 +5466,7 @@ function applyRemote(remote){
   .report-state span{display:block;margin-top:3px;color:var(--muted);font-size:11px}
   @media(max-width:520px){.report-summary{grid-template-columns:repeat(2,1fr)}.report-state-grid{grid-template-columns:1fr 1fr}.report-table{font-size:11px}.report-table th,.report-table td{padding:7px 5px}.report-dance-grid{grid-template-columns:1fr}.report-dance-row{grid-template-columns:22px 28px 22px minmax(0,1fr);gap:5px}}
   @media print{
+    @page{size:A4 portrait;margin:0}
     body{background:#fff!important;color:#111!important}
     body>*:not(#printReport){display:none!important}
     #printReport{display:block!important;padding:24px;color:#111;font-family:Arial,sans-serif}
@@ -5465,6 +5480,26 @@ function applyRemote(remote){
     #printReport .report-dance-no{color:#555}
     #printReport .report-stat,#printReport .report-state{border:1px solid #aaa;background:#fafafa}
     #printReport .report-stat b,#printReport .report-state b{color:#111!important}
+    #printReport.results-only{padding:0}
+    #printReport.results-only .print-page{width:210mm;height:297mm;box-sizing:border-box;padding:13mm 12mm;page-break-after:always;break-after:page;overflow:hidden}
+    #printReport.results-only .print-page:last-child{page-break-after:auto;break-after:auto}
+    #printReport.results-only h1{font-size:22px;margin:0 0 4px}
+    #printReport.results-only .print-meta{font-size:10px;color:#555;margin:0 0 12px}
+    #printReport.results-only .print-award-card{border:1px solid #777;border-radius:7px;overflow:hidden;background:#fff}
+    #printReport.results-only .print-award-head{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#eee;border-bottom:1px solid #999;color:#111}
+    #printReport.results-only .print-award-head h2{font-size:16px;margin:0;text-transform:uppercase}
+    #printReport.results-only .print-award-head span{font-size:10px;font-weight:700}
+    #printReport.results-only .print-group{padding:8px 10px 4px;font-size:10px;font-weight:800;text-transform:uppercase;color:#333;letter-spacing:.7px}
+    #printReport.results-only .print-award-row{display:grid;grid-template-columns:22px 30px 24px minmax(0,1fr) 108px;align-items:center;gap:7px;min-height:34px;padding:5px 10px;border-top:1px solid #ddd;color:#111;font-size:10px}
+    #printReport.results-only .print-award-row.special{min-height:32px}
+    #printReport.results-only .print-award-no{text-align:center;font-weight:800;color:#555}
+    #printReport.results-only .print-award-logo{width:28px;height:28px;border-radius:50%;background:#ddd;background-size:cover;background-position:center}
+    #printReport.results-only .print-award-flag{width:24px;height:16px;object-fit:cover;border-radius:2px;background:#eee}
+    #printReport.results-only .print-award-name{min-width:0;overflow-wrap:anywhere;line-height:1.15}
+    #printReport.results-only .print-award-prize{text-align:right;font-weight:800;font-size:10px}
+    #printReport.results-only .print-award-prize span{display:block;color:#555;font-size:8px;text-transform:uppercase}
+    #printReport.results-only .print-total{display:flex;justify-content:space-between;align-items:center;padding:12px 10px;border-top:1px solid #777;margin-top:8px;font-weight:800;text-transform:uppercase}
+    #printReport.results-only .print-total strong{font-size:16px}
   }
 </style>
 

@@ -3839,7 +3839,7 @@ function renderAdmin(){
     ['Tingkah Geruh',[['voting','Voting'],['results','Keputusan'],['draw','Undian Tingkah Geruh']]],
     ['Tarian Kreatif',[['dance','Undian Tarian Kreatif']]],
     ['Paparan',[['homeDisplay','Paparan Home']]],
-    ['Umum',[['teams','Pasukan'],['awards','Anugerah'],['settings','Tetapan']]]
+    ['Umum',[['teams','Pasukan'],['awards','Anugerah'],['reports','Laporan PDF'],['settings','Tetapan']]]
   ];
   let h=`<div class="adm-groups">`;
   admGroups.forEach(g=>{ h+=`<div class="adm-col"><div class="adm-grp">${g[0]}</div><div class="chips">`+
@@ -3852,6 +3852,7 @@ function renderAdmin(){
   else if(adSec==='dance')h+=admDance();
   else if(adSec==='homeDisplay')h+=admHomeDisplay();
   else if(adSec==='awards')h+=admAwards();
+  else if(adSec==='reports')h+=admReports();
   else h+=admSettings();
   c.innerHTML=h;
   c.querySelectorAll('[data-as]').forEach(b=>b.onclick=()=>{adSec=b.dataset.as;renderAdmin();});
@@ -3862,8 +3863,42 @@ function renderAdmin(){
   else if(adSec==='dance')bindDance();
   else if(adSec==='homeDisplay')bindHomeDisplay();
   else if(adSec==='awards')bindAwards();
+  else if(adSec==='reports')bindReports();
   else bindSettings();
 }
+
+/* --- admin: laporan keputusan dan analisis negeri --- */
+function reportStateCounts(){
+  const counts={}; T.teams.forEach(t=>{ const s=t.flagName||'Belum ditetapkan'; counts[s]=(counts[s]||0)+1; });
+  return Object.entries(counts).sort((a,b)=>b[1]-a[1]||a[0].localeCompare(b[0]));
+}
+function reportTeamName(id){ const t=team(id); return t?`${tName(t)}${tShort(t)?` (${tShort(t)})`:''}`:'—'; }
+function reportWinner(m){ const w=koWinner(m); return w?(w==='top'?m.top:m.bot):null; }
+function admReports(){
+  const d=danceObj(), states=reportStateCounts(), danceRows=[...d.s1.teams.map((id,i)=>['Sesi 1',i+1,id]),...d.s2.teams.map((id,i)=>['Sesi 2',i+1,id])].filter(x=>team(x[2]));
+  const battleRows=(T.ko||[]).filter(m=>m.round!=='TP'&&matchDone(m)&&isReal(m.top)&&isReal(m.bot));
+  const awardRows=[]; ['tarian','battle'].forEach(c=>AWARDS[c].special.forEach(it=>{ const a=awardsObj(), w=awardWinner(it[0]), name=a[it[0]+'Name']||(a[it[0]]&&!team(a[it[0]])?a[it[0]]:''); if(w||name)awardRows.push([AWARDS[c].title,it[1],w?reportTeamName(w):name]); }));
+  let h=`<div class="panel"><h2>Laporan &amp; Analisis</h2><p class="hint">Jana laporan lengkap keputusan undian dan analisis penyertaan negeri. Tekan cetak, kemudian pilih <b>Save as PDF</b> pada dialog cetakan.</p>
+    <div class="report-actions"><button class="btn" id="printReportBtn">🖨 Cetak / Simpan PDF</button><button class="btn ghost" id="printResultsBtn">📄 PDF Keputusan Sahaja</button></div>
+    <div class="report-summary"><div class="report-stat"><b>${T.teams.length}</b><span>Jumlah Pasukan</span></div><div class="report-stat"><b>${danceRows.length}</b><span>Peserta Tarian</span></div><div class="report-stat"><b>${battleRows.length}</b><span>Battle Selesai</span></div><div class="report-stat"><b>${states.length}</b><span>Negeri</span></div></div>
+    <div class="report-section-title">Analisis Penyertaan Mengikut Negeri</div><div class="report-state-grid">${states.map(([s,n])=>`<div class="report-state"><b>${n}</b><span>${esc(s)}</span></div>`).join('')}</div>
+    <div class="report-section-title">Peserta Tarian Kreatif Borneo</div><table class="report-table"><thead><tr><th>Sesi</th><th>No.</th><th>Pasukan</th><th>Negeri</th></tr></thead><tbody>${danceRows.map(([s,n,id])=>{const t=team(id);return `<tr><td>${esc(s)}</td><td>${n}</td><td>${esc(reportTeamName(id))}</td><td>${esc(t.flagName||'—')}</td></tr>`}).join('')||'<tr><td colspan="4">Belum ada peserta</td></tr>'}</tbody></table>
+    <div class="report-section-title">Keputusan Tingkah Geruh (Battle)</div><table class="report-table"><thead><tr><th>Perlawanan</th><th>Pasukan Atas</th><th>Skor</th><th>Pasukan Bawah</th><th>Menang</th></tr></thead><tbody>${battleRows.map(m=>`<tr><td>${esc(koNo(m))}</td><td>${esc(reportTeamName(m.top))}</td><td>${m.ts??'—'} - ${m.bs??'—'}</td><td>${esc(reportTeamName(m.bot))}</td><td>${esc(reportTeamName(reportWinner(m)))}</td></tr>`).join('')||'<tr><td colspan="5">Belum ada keputusan selesai</td></tr>'}</tbody></table>
+    <div class="report-section-title">Anugerah Khas</div><table class="report-table"><thead><tr><th>Pertandingan</th><th>Anugerah</th><th>Pemenang</th></tr></thead><tbody>${awardRows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')||'<tr><td colspan="3">Belum ada anugerah dicatat</td></tr>'}</tbody></table></div>`;
+  return h;
+}
+function printReport(resultsOnly){
+  const old=document.getElementById('printReport'); if(old)old.remove();
+  const d=danceObj(), states=reportStateCounts(), danceRows=[...d.s1.teams.map((id,i)=>['Sesi 1',i+1,id]),...d.s2.teams.map((id,i)=>['Sesi 2',i+1,id])].filter(x=>team(x[2]));
+  const battleRows=(T.ko||[]).filter(m=>m.round!=='TP'&&matchDone(m)&&isReal(m.top)&&isReal(m.bot));
+  const title=resultsOnly?'Keputusan Undian & Pertandingan':'Laporan Borneo Arts Festival 2026';
+  const section=(name,table)=>`<h2 class="report-section-title">${name}</h2>${table}`;
+  const stateTable=`<table class="report-table"><thead><tr><th>Negeri</th><th>Jumlah Pasukan</th></tr></thead><tbody>${states.map(([s,n])=>`<tr><td>${esc(s)}</td><td>${n}</td></tr>`).join('')}</tbody></table>`;
+  const danceTable=`<table class="report-table"><thead><tr><th>Sesi</th><th>No.</th><th>Pasukan</th><th>Negeri</th></tr></thead><tbody>${danceRows.map(([s,n,id])=>{const t=team(id);return `<tr><td>${esc(s)}</td><td>${n}</td><td>${esc(reportTeamName(id))}</td><td>${esc(t.flagName||'—')}</td></tr>`}).join('')||'<tr><td colspan="4">Belum ada peserta</td></tr>'}</tbody></table>`;
+  const battleTable=`<table class="report-table"><thead><tr><th>Perlawanan</th><th>Atas</th><th>Skor</th><th>Bawah</th><th>Menang</th></tr></thead><tbody>${battleRows.map(m=>`<tr><td>${esc(koNo(m))}</td><td>${esc(reportTeamName(m.top))}</td><td>${m.ts??'—'} - ${m.bs??'—'}</td><td>${esc(reportTeamName(m.bot))}</td><td>${esc(reportTeamName(reportWinner(m)))}</td></tr>`).join('')||'<tr><td colspan="5">Belum ada keputusan selesai</td></tr>'}</tbody></table>`;
+  const el=document.createElement('div'); el.id='printReport'; el.innerHTML=`<h1>${esc(title)}</h1><p>${esc(T.name||'Borneo Arts Festival 2026')} · Dijana ${new Date().toLocaleString('ms-MY')}</p>${resultsOnly?section('Keputusan Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable):section('Analisis Penyertaan Mengikut Negeri',stateTable)+section('Peserta Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable)}`; document.body.appendChild(el); window.addEventListener('afterprint',()=>el.remove(),{once:true}); window.print();
+}
+function bindReports(){ const p=$('#printReportBtn'), r=$('#printResultsBtn'); if(p)p.onclick=()=>printReport(false); if(r)r.onclick=()=>printReport(true); }
 
 /* --- admin: draw --- */
 /* ===== Undian Seeded (BETA) ===== */
@@ -4839,6 +4874,7 @@ function applyRemote(remote){
     ['adminResults','KEPUTUSAN','results'],
     ['adminDraw','UNDIAN TINGKAH GERUH · DRAW','draw'],
     ['adminAwards','ANUGERAH','awards'],
+    ['adminReports','LAPORAN PDF','reports'],
     ['adminSettings','TETAPAN','settings']
   ];
 
@@ -4969,6 +5005,7 @@ function applyRemote(remote){
           adminResults:I.results,
           adminDraw:I.draw,
           adminAwards:I.awards,
+          adminReports:I.results,
           adminSettings:I.settings
         };
 
@@ -5387,6 +5424,33 @@ function applyRemote(remote){
   .pool-lbl{font-family:var(--display);text-transform:uppercase;letter-spacing:1.2px;font-weight:700;font-size:12px;color:#2a2008;opacity:.85}
   .pool-v{font-family:var(--mono);font-weight:800;font-size:32px;color:#1a1305;line-height:1.1;margin:4px 0 8px}
   .pool-sub{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 16px;font-family:var(--mono);font-weight:700;font-size:11.5px;color:#2a2008;opacity:.9}
+
+  /* Admin reports */
+  .report-actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 14px}
+  .report-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+  .report-stat{padding:12px;border:1px solid var(--line);border-radius:11px;background:var(--panel-2);text-align:center}
+  .report-stat b{display:block;font-family:var(--mono);font-size:20px;color:var(--gold3,#f0d487)}
+  .report-stat span{display:block;margin-top:3px;font-family:var(--display);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+  .report-table{width:100%;border-collapse:collapse;font-size:12px}
+  .report-table th,.report-table td{padding:8px 9px;border-bottom:1px solid var(--line);text-align:left}
+  .report-table th{font-family:var(--display);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--gold3,#f0d487)}
+  .report-table td:last-child,.report-table th:last-child{text-align:right}
+  .report-section-title{font-family:var(--display);font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--gold3,#f0d487);margin:18px 0 7px}
+  .report-state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+  .report-state{padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(216,177,90,.06)}
+  .report-state b{display:block;font-family:var(--mono);font-size:18px;color:var(--gold3,#f0d487)}
+  .report-state span{display:block;margin-top:3px;color:var(--muted);font-size:11px}
+  @media(max-width:520px){.report-summary{grid-template-columns:repeat(2,1fr)}.report-state-grid{grid-template-columns:1fr 1fr}.report-table{font-size:11px}.report-table th,.report-table td{padding:7px 5px}}
+  @media print{
+    body{background:#fff!important;color:#111!important}
+    body>*:not(#printReport){display:none!important}
+    #printReport{display:block!important;padding:24px;color:#111;font-family:Arial,sans-serif}
+    #printReport h1,#printReport h2{color:#111!important}
+    #printReport .report-table th{color:#111!important;background:#eee!important}
+    #printReport .report-section-title{color:#111!important}
+    #printReport .report-stat,#printReport .report-state{border:1px solid #aaa;background:#fafafa}
+    #printReport .report-stat b,#printReport .report-state b{color:#111!important}
+  }
 </style>
 
 <style id="pwa-install-ui">

@@ -3875,17 +3875,7 @@ function reportStateCounts(){
 function reportTeamName(id){ const t=team(id); return t?`${tName(t)}${tShort(t)?` (${tShort(t)})`:''}`:'—'; }
 function reportWinner(m){ const w=koWinner(m); return w?(w==='top'?m.top:m.bot):null; }
 function admReports(){
-  const d=danceObj(), states=reportStateCounts(), danceRows=[...d.s1.teams.map((id,i)=>['Sesi 1',i+1,id]),...d.s2.teams.map((id,i)=>['Sesi 2',i+1,id])].filter(x=>team(x[2]));
-  const battleRows=(T.ko||[]).filter(m=>m.round!=='TP'&&matchDone(m)&&isReal(m.top)&&isReal(m.bot));
-  const awardRows=[]; ['tarian','battle'].forEach(c=>AWARDS[c].special.forEach(it=>{ const a=awardsObj(), w=awardWinner(it[0]), name=a[it[0]+'Name']||(a[it[0]]&&!team(a[it[0]])?a[it[0]]:''); if(w||name)awardRows.push([AWARDS[c].title,it[1],w?reportTeamName(w):name]); }));
-  let h=`<div class="panel"><h2>Laporan &amp; Analisis</h2><p class="hint">Jana laporan lengkap keputusan undian dan analisis penyertaan negeri. Tekan cetak, kemudian pilih <b>Save as PDF</b> pada dialog cetakan.</p>
-    <div class="report-actions"><button class="btn" id="printReportBtn">🖨 Cetak / Simpan PDF</button><button class="btn ghost" id="printResultsBtn">📄 PDF Keputusan Sahaja</button></div>
-    <div class="report-summary"><div class="report-stat"><b>${T.teams.length}</b><span>Jumlah Pasukan</span></div><div class="report-stat"><b>${danceRows.length}</b><span>Peserta Tarian</span></div><div class="report-stat"><b>${battleRows.length}</b><span>Battle Selesai</span></div><div class="report-stat"><b>${states.length}</b><span>Negeri</span></div></div>
-    <div class="report-section-title">Analisis Penyertaan Mengikut Negeri</div><div class="report-state-grid">${states.map(([s,n])=>`<div class="report-state"><b>${n}</b><span>${esc(s)}</span></div>`).join('')}</div>
-    <div class="report-section-title">Peserta Tarian Kreatif Borneo</div><table class="report-table"><thead><tr><th>Sesi</th><th>No.</th><th>Pasukan</th><th>Negeri</th></tr></thead><tbody>${danceRows.map(([s,n,id])=>{const t=team(id);return `<tr><td>${esc(s)}</td><td>${n}</td><td>${esc(reportTeamName(id))}</td><td>${esc(t.flagName||'—')}</td></tr>`}).join('')||'<tr><td colspan="4">Belum ada peserta</td></tr>'}</tbody></table>
-    <div class="report-section-title">Keputusan Tingkah Geruh (Battle)</div><table class="report-table"><thead><tr><th>Perlawanan</th><th>Pasukan Atas</th><th>Skor</th><th>Pasukan Bawah</th><th>Menang</th></tr></thead><tbody>${battleRows.map(m=>`<tr><td>${esc(koNo(m))}</td><td>${esc(reportTeamName(m.top))}</td><td>${m.ts??'—'} - ${m.bs??'—'}</td><td>${esc(reportTeamName(m.bot))}</td><td>${esc(reportTeamName(reportWinner(m)))}</td></tr>`).join('')||'<tr><td colspan="5">Belum ada keputusan selesai</td></tr>'}</tbody></table>
-    <div class="report-section-title">Anugerah Khas</div><table class="report-table"><thead><tr><th>Pertandingan</th><th>Anugerah</th><th>Pemenang</th></tr></thead><tbody>${awardRows.map(r=>`<tr><td>${esc(r[0])}</td><td>${esc(r[1])}</td><td>${esc(r[2])}</td></tr>`).join('')||'<tr><td colspan="3">Belum ada anugerah dicatat</td></tr>'}</tbody></table></div>`;
-  return h;
+  return `<div class="panel"><h2>PDF Keputusan Sahaja</h2><p class="hint">Cetak keputusan pertandingan dalam <b>2 halaman A4</b>: satu halaman untuk Tarian Kreatif Borneo dan satu halaman untuk Tingkah Geruh (Battle). Pilih <b>Save as PDF</b> dalam dialog cetakan.</p><div class="report-actions"><button class="btn" id="printResultsBtn">📄 Cetak PDF Keputusan</button></div></div>`;
 }
 function printReport(resultsOnly){
   const old=document.getElementById('printReport'); if(old)old.remove();
@@ -3913,7 +3903,7 @@ function printReport(resultsOnly){
   const battleTable=`<table class="report-table"><thead><tr><th>Perlawanan</th><th>Atas</th><th>Skor</th><th>Bawah</th><th>Menang</th></tr></thead><tbody>${battleRows.map(m=>`<tr><td>${esc(koNo(m))}</td><td>${esc(reportTeamName(m.top))}</td><td>${m.ts??'—'} - ${m.bs??'—'}</td><td>${esc(reportTeamName(m.bot))}</td><td>${esc(reportTeamName(reportWinner(m)))}</td></tr>`).join('')||'<tr><td colspan="5">Belum ada keputusan selesai</td></tr>'}</tbody></table>`;
   const el=document.createElement('div'); el.id='printReport'; el.className=resultsOnly?'results-only':''; el.innerHTML=resultsOnly?printAwardPage('tarian')+printAwardPage('battle'):`<h1>${esc(title)}</h1><p>${esc(T.name||'Borneo Arts Festival 2026')} · Dijana ${new Date().toLocaleString('ms-MY')}</p>${section('Analisis Penyertaan Mengikut Negeri',stateTable)+section('Peserta Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable)}`; document.body.appendChild(el); window.addEventListener('afterprint',()=>el.remove(),{once:true}); window.print();
 }
-function bindReports(){ const p=$('#printReportBtn'), r=$('#printResultsBtn'); if(p)p.onclick=()=>printReport(false); if(r)r.onclick=()=>printReport(true); }
+function bindReports(){ const r=$('#printResultsBtn'); if(r)r.onclick=()=>printReport(true); }
 
 /* --- admin: draw --- */
 /* ===== Undian Seeded (BETA) ===== */

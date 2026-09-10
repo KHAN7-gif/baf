@@ -3888,9 +3888,11 @@ function printReport(resultsOnly){
     const logoFor=t=>t&&t.logo?` style="background-image:url('${imgSrc(t.logo)}')"`:'';
     const awardRow=(it,i,special)=>{
       const raw=a[it[0]], w=awardWinner(it[0]), individual=a[it[0]+'Name']||(raw&&!team(raw)?String(raw):'');
-      const selectedTeam=team(raw), label=w?reportTeamName(w):selectedTeam?reportTeamName(selectedTeam):individual||'Belum ditentukan';
-      const displayName=w?`${label}${individual?` · ${individual}`:''}`:label;
-      const t=w||selectedTeam;
+      const selectedTeam=team(raw), winnerTeam=w||selectedTeam;
+      const teamLabel=winnerTeam?reportTeamName(winnerTeam):'Pasukan belum dipilih';
+      const dancerLabel=individual?`Penari: ${individual}`:(special&&/Penari|Peningkah/.test(it[1])?'Penari belum diisi':'');
+      const displayName=`Pasukan: ${teamLabel}${dancerLabel?` · ${dancerLabel}`:''}`;
+      const t=winnerTeam;
       return `<div class="print-award-row${special?' special':''}"><span class="print-award-no">${special?'★':i+1}</span><span class="print-award-logo"${logoFor(t)}></span>${t&&t.flag?`<img class="print-award-flag" src="${imgSrc(t.flag)}" alt="">`:'<span class="print-award-flag"></span>'}<span class="print-award-name">${esc(displayName)}</span><span class="print-award-prize"><span>${esc(it[1])}</span>${fmtRM(prizeOf(it[0],it[2]))}</span></div>`;
     };
     const placement=A.placement.map((it,i)=>awardRow(it,i,false)).join('');

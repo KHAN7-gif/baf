@@ -5323,13 +5323,15 @@ function applyRemote(remote){
   .award-table .ghead h3{font-size:17px!important;color:#f2d991!important}
   .award-table .ghead .fx-gn{font-size:10px;color:#a99b7e}
   .award-table .aw-grouph{font-size:12px;color:#e2c36f;margin:14px 6px 7px}
-  .award-table .award-row{min-height:64px;padding:11px 18px!important;gap:12px;border-left:3px solid transparent!important;transition:.15s}
+  .award-table .award-row{display:grid;grid-template-columns:22px 28px minmax(0,1fr) minmax(104px,30%);align-items:center;min-height:64px;padding:11px 18px!important;gap:12px;border-left:3px solid transparent!important;transition:.15s}
   .award-table .award-row:hover{background:rgba(216,177,90,.07)!important;border-left-color:#d8b15a!important}
   .award-table .award-row .pos{font-size:14px;color:#c7b58f;width:22px}
-  .award-table .award-row .tn{font-size:14px;color:#f5eedc}
+  .award-table .award-row .bdg{width:28px;height:28px}
+  .award-table .award-row .tn{min-width:0;font-size:14px;color:#f5eedc;white-space:normal;overflow:visible;text-overflow:clip;overflow-wrap:anywhere;line-height:1.25}
   .award-table .award-row .tn .flag{width:22px;height:15px}
-  .award-table .award-row .aw-rlabel{font-size:11px;color:#c7b58f}
-  .award-table .award-row .aw-rprize{font-size:13px;color:#f2d991}
+  .award-table .award-row .aw-right{min-width:0;width:100%;align-self:center}
+  .award-table .award-row .aw-rlabel{font-size:11px;color:#c7b58f;white-space:normal;line-height:1.15}
+  .award-table .award-row .aw-rprize{font-size:13px;color:#f2d991;white-space:nowrap}
   .award-table .award-row.award-titanium{border-left-color:#f0d487!important;background:linear-gradient(90deg,rgba(240,212,135,.10),transparent 45%)!important}
   .award-table .award-row.award-platinum{border-left-color:#c4d0dc!important}
   .award-table .award-row.award-gold{border-left-color:#e6c34a!important}
@@ -5343,8 +5345,8 @@ function applyRemote(remote){
   @media(max-width:520px){
     .award-table .ghead{padding:14px!important}
     .award-table .ghead h3{font-size:15px!important}
-    .award-table .award-row{padding:10px 12px!important;gap:8px}
-    .award-table .award-row .tn{font-size:12.5px}
+    .award-table .award-row{grid-template-columns:18px 28px minmax(0,1fr) minmax(82px,31%);padding:10px 12px!important;gap:7px}
+    .award-table .award-row .tn{font-size:12.5px;line-height:1.2}
     .award-table .award-row .aw-rlabel{font-size:9px}
     .award-table .award-row .aw-rprize{font-size:11px}
   }

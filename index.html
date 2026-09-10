@@ -2943,6 +2943,24 @@ async function liveSet(patch){ Object.assign(LV,patch); liveSaveLocal();
 function liveLabels(){ return { red:LV.rl||'Merah', green:LV.yl||'Hijau' }; }
 function liveJudges(){ const out=[]; for(let i=0;i<NJUDGES;i++)out.push({i,name:LV['n'+i]||('Juri '+(i+1)),vote:LV['v'+i]||null,active:LV['a'+i]!==false}); return out; }
 function liveTally(){ let r=0,g=0; for(let i=0;i<NJUDGES;i++){ const v=LV['v'+i]; if(v==='red')r++; else if(v==='green')g++; } return {r,g}; }
+async function syncJudgeScoreToMatch(){
+  if(_juri!==null||isViewOnly()||!T||!Array.isArray(T.ko))return;
+  const m=liveMatch(), judges=liveJudges(), active=judges.filter(j=>j.active);
+  if(!m||!active.length)return;
+  const complete=active.every(j=>j.vote==='red'||j.vote==='green');
+  if(m.scoreSource==='manual')return;
+  const tally=liveTally();
+  if(tally.r||tally.g){
+    m.ts=tally.r; m.bs=tally.g; m.pts=null; m.pbs=null;
+    m.status=complete?'ft':'live'; m.scoreSource='judge';
+  }else if(m.scoreSource==='judge'){
+    m.ts=null; m.bs=null; m.pts=null; m.pbs=null; m.status='live'; m.scoreSource=null;
+  }else return;
+  propagateKO();
+  await save();
+  renderPublic();
+  if(adminOK&&$('#tab-admin')&&!$('#tab-admin').hidden&&adSec==='results')renderAdmin();
+}
 function judgeLink(i){ return location.origin+location.pathname+'?juri='+(i+1); }
 function getJuri(){ try{ const p=new URLSearchParams(location.search).get('juri'); const n=parseInt(p); return (n>=1&&n<=NJUDGES)?(n-1):null; }catch(e){ return null; } }
 /* pasukan battle ikut match yang sedang LIVE (merah=atas, hijau=bawah) */
@@ -3878,7 +3896,7 @@ function admResults(){
   if(!T.ko||!T.ko.length)return `<div class="panel" style="background:none;border:0;box-shadow:none;padding:6px 2px"><p class="hint">Bracket belum diundi. Buat undian dulu di tab Undian.</p></div>`;
   const rounds=koRounds().concat(T.ko.some(m=>m.round==='TP')?['TP']:[]);
   if(rRound!=='all'&&!rounds.includes(rRound))rRound='all';
-  let h=`<p class="hint" style="margin:2px 2px 10px">Ketuk mana-mana kad perlawanan untuk isi keputusan — pilih nombor 0–5 untuk kedua-dua pasukan, kemudian tetapkan status.</p>`;
+  let h=`<p class="hint" style="margin:2px 2px 10px">Markah juri masuk automatik selepas semua juri aktif mengundi. Crew masih boleh ketuk kad untuk isi atau ubah keputusan secara manual.</p>`;
   h+=`<div class="chips mc-chips"><button class="chip${rRound==='all'?' active':''}" data-rr="all">Semua</button>`+
     rounds.map(r=>`<button class="chip${rRound===r?' active':''}" data-rr="${r}">${KOCAT[r]||KOLABEL[r]}</button>`).join('')+`</div>`;
   const show=rRound==='all'?rounds:[rRound];
@@ -3918,11 +3936,11 @@ function buildScoreBody(){
   $('#scoreTitle').innerHTML=`Keputusan · <span style="color:var(--mint)">${koNo(m)}</span> · ${esc(KOLABEL[m.round]||'')}`;
   $('#scoreBody').innerHTML=h;
   $('#scoreBody').querySelectorAll('.sm-num').forEach(b=>b.onclick=()=>{ const m2=T.ko.find(x=>x.id===activeScore); if(!m2)return;
-    m2[b.dataset.side]=+b.dataset.n; propagateKO(); save(); buildScoreBody(); renderPublic(); });
+    m2[b.dataset.side]=+b.dataset.n; m2.scoreSource='manual'; propagateKO(); save(); buildScoreBody(); renderPublic(); });
   $('#scoreBody').querySelectorAll('.sm-st').forEach(b=>b.onclick=()=>{ const m2=T.ko.find(x=>x.id===activeScore); if(!m2)return;
     m2.status=b.dataset.st; propagateKO(); save(); syncBattleToLive(); buildScoreBody(); renderPublic(); });
   const rb=$('#scoreBody').querySelector('.sm-reset'); if(rb)rb.onclick=()=>{ const m2=T.ko.find(x=>x.id===activeScore); if(!m2)return;
-    m2.ts=null; m2.bs=null; m2.pts=null; m2.pbs=null; m2.status='sched'; propagateKO(); save(); buildScoreBody(); renderPublic(); renderAdmin(); toast('Keputusan direset'); };
+    m2.ts=null; m2.bs=null; m2.pts=null; m2.pbs=null; m2.status='sched'; m2.scoreSource=null; propagateKO(); save(); buildScoreBody(); renderPublic(); renderAdmin(); toast('Keputusan direset'); };
   const sb=$('#scoreBody').querySelector('.sm-save'); if(sb)sb.onclick=()=>{ propagateKO(); save(); syncBattleToLive(); renderPublic(); renderAdmin(); $('#scoreModal').hidden=true; toast('Keputusan disimpan'); };
 }
 
@@ -4008,7 +4026,7 @@ function bindVoting(){
   c.querySelectorAll('input[data-vjn]').forEach(inp=>inp.oninput=()=>{ liveSet({['n'+(+inp.dataset.vjn)]:inp.value}); soft(); });
   const rl=$('#vRed'); if(rl)rl.oninput=()=>{ liveSet({rl:rl.value}); soft(); };
   const gl=$('#vGreen'); if(gl)gl.oninput=()=>{ liveSet({yl:gl.value}); soft(); };
-  c.querySelectorAll('.vbtn[data-vj]').forEach(b=>b.onclick=async()=>{ await liveSet({['v'+(+b.dataset.vj)]:b.dataset.vv||null}); renderAdmin(); renderPublic(); });
+  c.querySelectorAll('.vbtn[data-vj]').forEach(b=>b.onclick=async()=>{ await liveSet({['v'+(+b.dataset.vj)]:b.dataset.vv||null}); await syncJudgeScoreToMatch(); renderAdmin(); renderPublic(); });
   c.querySelectorAll('.vj-active[data-vja]').forEach(b=>b.onclick=async()=>{ const i=+b.dataset.vja; await liveSet({['a'+i]:!(LV['a'+i]!==false)}); renderAdmin(); renderPublic(); });
   const on=$('#vAllOn'); if(on)on.onclick=async()=>{ const p={}; for(let i=0;i<NJUDGES;i++)p['a'+i]=true; await liveSet(p); renderAdmin(); renderPublic(); toast('Semua juri dibuka'); };
   const off=$('#vAllOff'); if(off)off.onclick=async()=>{ const p={}; for(let i=0;i<NJUDGES;i++)p['a'+i]=false; await liveSet(p); renderAdmin(); renderPublic(); toast('Semua juri dikunci'); };
@@ -4051,6 +4069,7 @@ function renderJudgePage(idx){
 function onLiveUpdate(){
   if(_overlay==='vote'){ renderVoteOverlay(); return; }
   if(_juri!==null){ renderJudgePage(_juri); return; }
+  syncJudgeScoreToMatch();
   const ae=document.activeElement, typing=ae&&/^(INPUT|SELECT|TEXTAREA)$/.test(ae.tagName);
   if(adminOK&&$('#tab-admin')&&!$('#tab-admin').hidden&&adSec==='voting'&&!typing)renderAdmin();
   if($('#tab-obs')&&!$('#tab-obs').hidden&&obsView==='voting')renderOBS();

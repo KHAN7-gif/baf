@@ -2964,7 +2964,7 @@ async function syncJudgeScoreToMatch(){
 function judgeLink(i){ return location.origin+location.pathname+'?juri='+(i+1); }
 function getJuri(){ try{ const p=new URLSearchParams(location.search).get('juri'); const n=parseInt(p); return (n>=1&&n<=NJUDGES)?(n-1):null; }catch(e){ return null; } }
 /* pasukan battle ikut match yang sedang LIVE (merah=atas, hijau=bawah) */
-function liveMatch(){ return (typeof T==='object'&&T&&T.ko)?T.ko.find(x=>x.status==='live'&&isReal(x.top)&&isReal(x.bot)):null; }
+function liveMatch(){ return (typeof T==='object'&&T&&T.ko)?T.ko.find(x=>(x.status==='live'||x.scoreSource==='judge')&&isReal(x.top)&&isReal(x.bot)):null; }
 function battleSides(){ const L=liveLabels(), m=liveMatch();
   if(m)return {red:{team:team(m.top),label:tName(team(m.top))},green:{team:team(m.bot),label:tName(team(m.bot))},match:m};
   return {red:{team:null,label:L.red},green:{team:null,label:L.green},match:null}; }

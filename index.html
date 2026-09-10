@@ -4378,14 +4378,14 @@ function bindHomeDisplay(){
 function teamOptsAward(sel){ return `<option value="">— Belum dipilih —</option>`+T.teams.map(t=>`<option value="${t.id}"${t.id===sel?' selected':''}>${esc(tName(t))}</option>`).join(''); }
 function admAwards(){
   const a=awardsObj();
-  let h=`<div class="panel"><h2>Anugerah</h2><p class="hint">Pilih pasukan pemenang bagi setiap anugerah. Untuk <b>Peningkah Lelaki Terbaik</b> dan <b>Peningkah Perempuan Terbaik</b>, taip nama penari secara manual. Ia muncul automatik di <b>detail pasukan</b> dan tab <b>Home</b>. Kedudukan Tingkah Geruh (Titanium/Platinum/Gold/Silver) diisi <b>automatik</b> dari carta Kalah Mati.<br><b style="color:var(--gold3,#f0d487)">💰 Jumlah hadiah (RM) boleh diedit</b> — taip nilai baharu, ia disimpan automatik.</p></div>`;
+  let h=`<div class="panel"><h2>Anugerah</h2><p class="hint">Pilih pasukan pemenang bagi setiap anugerah. Untuk kategori <b>Penari/Peningkah Lelaki Terbaik</b> dan <b>Penari/Peningkah Perempuan Terbaik</b>, taip nama individu secara manual. Ia muncul automatik di <b>detail pasukan</b> dan tab <b>Home</b>. Kedudukan Tingkah Geruh (Titanium/Platinum/Gold/Silver) diisi <b>automatik</b> dari carta Kalah Mati.<br><b style="color:var(--gold3,#f0d487)">💰 Jumlah hadiah (RM) boleh diedit</b> — taip nilai baharu, ia disimpan automatik.</p></div>`;
   ['tarian','battle'].forEach(c=>{ const A=AWARDS[c];
     h+=`<div class="panel"><h2>${esc(A.title)}</h2>`;
     const block=(list,label,numbered)=>{ h+=`<div class="aw-grouph">${label}</div>`;
       list.forEach((it,i)=>{ const auto=!!AUTO_AW[it[0]], w=auto?awardWinner(it[0]):null;
         const ctrl=auto
           ? `<div class="aw-auto">${w?flagImg(w)+esc(tName(w)):'<span style="color:var(--muted)">Auto ikut carta Kalah Mati</span>'}</div>`
-          : (c==='battle'&&['bx1','bx2'].includes(it[0]))
+          : ((c==='battle'&&['bx1','bx2'].includes(it[0]))||(c==='tarian'&&['tx6','tx7'].includes(it[0])))
             ? `<input class="aw-name-input" type="text" data-aw-name="${it[0]}" value="${esc(a[it[0]]||'')}" placeholder="Nama penari pemenang">`
             : `<select class="aw-sel" data-aw="${it[0]}">${teamOptsAward(a[it[0]]||'')}</select>`;
         h+=`<div class="aw-ed"><div class="aw-ed-l"><span class="aw-no">${numbered?(i+1):'★'}</span><span class="aw-nm">${esc(it[1])}</span><span class="aw-prize aw-prize-ed">RM <input type="number" class="prize-in" data-prize="${it[0]}" value="${prizeOf(it[0],it[2])}" min="0" step="100" inputmode="numeric"></span></div>${ctrl}</div>`; }); };

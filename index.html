@@ -3894,7 +3894,8 @@ function printReport(resultsOnly){
   const title=resultsOnly?'Keputusan Undian & Pertandingan':'Laporan Borneo Arts Festival 2026';
   const section=(name,table)=>`<h2 class="report-section-title">${name}</h2>${table}`;
   const stateTable=`<table class="report-table"><thead><tr><th>Negeri</th><th>Jumlah Pasukan</th></tr></thead><tbody>${states.map(([s,n])=>`<tr><td>${esc(s)}</td><td>${n}</td></tr>`).join('')}</tbody></table>`;
-  const danceTable=`<table class="report-table"><thead><tr><th>Sesi</th><th>No.</th><th>Pasukan</th><th>Negeri</th></tr></thead><tbody>${danceRows.map(([s,n,id])=>{const t=team(id);return `<tr><td>${esc(s)}</td><td>${n}</td><td>${esc(reportTeamName(id))}</td><td>${esc(t.flagName||'—')}</td></tr>`}).join('')||'<tr><td colspan="4">Belum ada peserta</td></tr>'}</tbody></table>`;
+  const danceSessionHTML=(s,label)=>{ let rows=''; for(let i=0;i<Math.max(15,s.teams.length);i++){ const t=team(s.teams[i]||''), logo=t&&t.logo?` style="background-image:url('${imgSrc(t.logo)}')"`:''; const flag=t&&t.flag?`<img class="report-dance-flag" src="${imgSrc(t.flag)}" alt="">`:'<span class="report-dance-flag"></span>'; rows+=`<div class="report-dance-row"><span class="report-dance-no">${i+1}</span>${t?`<span class="report-dance-logo"${logo}></span>`:'<span class="report-dance-logo"></span>'}${flag}<span class="report-dance-name">${t?esc(tName(t)):'— Pilih pasukan —'}</span></div>`; } return `<div class="report-dance-session"><div class="report-dance-head">${esc(label)} · Susun Peserta (${s.teams.length})</div>${rows}</div>`; };
+  const danceTable=`<div class="report-dance-grid">${danceSessionHTML(d.s1,'Sesi 1')}${danceSessionHTML(d.s2,'Sesi 2')}</div>`;
   const battleTable=`<table class="report-table"><thead><tr><th>Perlawanan</th><th>Atas</th><th>Skor</th><th>Bawah</th><th>Menang</th></tr></thead><tbody>${battleRows.map(m=>`<tr><td>${esc(koNo(m))}</td><td>${esc(reportTeamName(m.top))}</td><td>${m.ts??'—'} - ${m.bs??'—'}</td><td>${esc(reportTeamName(m.bot))}</td><td>${esc(reportTeamName(reportWinner(m)))}</td></tr>`).join('')||'<tr><td colspan="5">Belum ada keputusan selesai</td></tr>'}</tbody></table>`;
   const el=document.createElement('div'); el.id='printReport'; el.innerHTML=`<h1>${esc(title)}</h1><p>${esc(T.name||'Borneo Arts Festival 2026')} · Dijana ${new Date().toLocaleString('ms-MY')}</p>${resultsOnly?section('Keputusan Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable):section('Analisis Penyertaan Mengikut Negeri',stateTable)+section('Peserta Tarian Kreatif Borneo',danceTable)+section('Keputusan Tingkah Geruh (Battle)',battleTable)}`; document.body.appendChild(el); window.addEventListener('afterprint',()=>el.remove(),{once:true}); window.print();
 }
@@ -5436,11 +5437,20 @@ function applyRemote(remote){
   .report-table th{font-family:var(--display);font-size:10px;text-transform:uppercase;letter-spacing:.7px;color:var(--gold3,#f0d487)}
   .report-table td:last-child,.report-table th:last-child{text-align:right}
   .report-section-title{font-family:var(--display);font-size:13px;text-transform:uppercase;letter-spacing:1px;color:var(--gold3,#f0d487);margin:18px 0 7px}
+  .report-dance-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .report-dance-session{border:1px solid var(--line);border-radius:10px;overflow:hidden;background:#faf7ef}
+  .report-dance-head{padding:10px 12px;background:#efe5cb;border-bottom:1px solid #d8c69e;font-family:var(--display);font-size:12px;font-weight:800;color:#332817;text-transform:uppercase}
+  .report-dance-row{display:grid;grid-template-columns:25px 30px 24px minmax(0,1fr);align-items:center;gap:7px;padding:7px 9px;border-bottom:1px solid #e5dcc8;color:#332817;font-size:11px;font-weight:700}
+  .report-dance-row:last-child{border-bottom:0}
+  .report-dance-no{font-family:var(--mono);color:#8c7959;text-align:center}
+  .report-dance-logo{width:30px;height:30px;border-radius:50%;background:#ddd;background-size:cover;background-position:center;display:block}
+  .report-dance-flag{width:24px;height:16px;object-fit:cover;border-radius:2px;display:block}
+  .report-dance-name{min-width:0;overflow-wrap:anywhere;line-height:1.2}
   .report-state-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
   .report-state{padding:10px;border:1px solid var(--line);border-radius:10px;background:rgba(216,177,90,.06)}
   .report-state b{display:block;font-family:var(--mono);font-size:18px;color:var(--gold3,#f0d487)}
   .report-state span{display:block;margin-top:3px;color:var(--muted);font-size:11px}
-  @media(max-width:520px){.report-summary{grid-template-columns:repeat(2,1fr)}.report-state-grid{grid-template-columns:1fr 1fr}.report-table{font-size:11px}.report-table th,.report-table td{padding:7px 5px}}
+  @media(max-width:520px){.report-summary{grid-template-columns:repeat(2,1fr)}.report-state-grid{grid-template-columns:1fr 1fr}.report-table{font-size:11px}.report-table th,.report-table td{padding:7px 5px}.report-dance-grid{grid-template-columns:1fr}.report-dance-row{grid-template-columns:22px 28px 22px minmax(0,1fr);gap:5px}}
   @media print{
     body{background:#fff!important;color:#111!important}
     body>*:not(#printReport){display:none!important}
@@ -5448,6 +5458,11 @@ function applyRemote(remote){
     #printReport h1,#printReport h2{color:#111!important}
     #printReport .report-table th{color:#111!important;background:#eee!important}
     #printReport .report-section-title{color:#111!important}
+    #printReport .report-dance-grid{gap:10px}
+    #printReport .report-dance-session{border:1px solid #aaa;background:#fff}
+    #printReport .report-dance-head{background:#eee;border-bottom-color:#aaa;color:#111}
+    #printReport .report-dance-row{border-bottom-color:#ddd;color:#111}
+    #printReport .report-dance-no{color:#555}
     #printReport .report-stat,#printReport .report-state{border:1px solid #aaa;background:#fafafa}
     #printReport .report-stat b,#printReport .report-state b{color:#111!important}
   }

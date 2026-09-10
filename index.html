@@ -1216,6 +1216,47 @@ tr:hover td{background:rgba(216,177,90,.035)!important}
 #tab-teams .srow .tn .sub2{
   color:#aa9a78!important;
 }
+#tab-teams .team-mark{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  flex:none;
+}
+#tab-teams .team-mark .flag{
+  width:24px;
+  height:17px;
+  margin:0;
+}
+#tab-teams .team-info{
+  flex:1;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+#tab-teams .team-full{
+  color:#f5eedf;
+  font-weight:800;
+  font-size:14px;
+  line-height:1.2;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#tab-teams .team-nick,
+#tab-teams .team-state{
+  color:#a99b7c;
+  font-family:var(--mono);
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.35px;
+  text-transform:uppercase;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#tab-teams .team-nick{color:#e6c873}
+#tab-teams .team-state{font-family:var(--body);font-weight:600;text-transform:none;letter-spacing:0}
 #tab-teams .srow .tstat{
   background:rgba(216,177,90,.12)!important;
   border:1px solid rgba(216,177,90,.25)!important;
@@ -3375,8 +3416,9 @@ function renderTeams(){
   const host=$('#tab-teams'); if(!host)return;
   let h=`<div class="gcard"><div class="ghead"><h3>Pasukan · ${T.teams.length}</h3><span class="fx-gn">ketuk untuk detail</span></div>`;
   T.teams.forEach((t,i)=>{ const na=(t.ach||[]).length;
-    h+=`<div class="srow tap" data-tdet="${t.id}"><span class="pos">${i+1}</span>${tbadge(t)}
-      <span class="tn">${flagImg(t)}${esc(tName(t))}${t.flagName?`<span class="sub2"> · ${esc(t.flagName)}</span>`:''}${na?`<span class="sub2"> · 🏅${na}</span>`:''}</span>
+    h+=`<div class="srow tap" data-tdet="${t.id}"><span class="pos">${i+1}</span>
+      <span class="team-mark">${tbadge(t)}${flagImg(t)}</span>
+      <span class="team-info"><span class="team-full">${esc(tName(t))}</span><span class="team-nick">${esc(tShort(t))}</span><span class="team-state">${esc(t.flagName||'Negeri belum ditetapkan')}${na?` · 🏅${na}`:''}</span></span>
       ${teamResultBadges(t.id)}</div>`;
   });
   h+=`</div>`;

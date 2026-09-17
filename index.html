@@ -3521,8 +3521,6 @@ function buildTeamDetail(){
               <div class="td-note">Setiap pasukan mempunyai logo dan imej sendiri. Gunakan pautan Google Drive / URL gambar.</div>
             </div>
           </div>
-          <div class="td-field"><label>Nama Tarian</label><input id="tdDanceName" value="${esc(t.danceName||'')}" placeholder="Contoh: Zapin Gemilang Borneo"></div>
-          <div class="td-field"><label>Sinopsis Tarian</label><textarea id="tdDanceSynopsis" placeholder="Ringkasan persembahan / konsep tarian...">${esc(t.danceSynopsis||'')}</textarea></div>
         </div>
       </div>
       <div class="td-sec"><div class="td-sec-t">▶ Video Persembahan</div><div class="td-edit">
@@ -3533,8 +3531,6 @@ function buildTeamDetail(){
   } else {
     h+=`<div class="td-pane on" data-tdcontent="profile"><div class="td-profile">`;
     if(t.teamImage)h+=`<div class="td-team-photo-public"><img src="${imgSrc(t.teamImage)}" alt="Imej ${esc(tName(t))}" loading="lazy"></div>`;
-    h+=`<div class="td-info-grid"><div class="td-info"><div class="td-info-l">Nama Tarian</div><div class="td-info-v">${esc(t.danceName||'Belum diisi')}</div></div></div>`;
-    h+=`<div><div class="td-sec-t">💃 Sinopsis Tarian</div><div class="td-copy">${esc(t.danceSynopsis||'Belum diisi')}</div></div>`;
     h+=`<div class="td-sec"><div class="td-sec-t">▶ Video Persembahan</div>`;
     h+=videoId?`<div class="td-video" data-video="${esc(t.video)}"><img src="${thumb}" alt="Thumbnail video persembahan" loading="lazy"></div><div class="td-video-cap">Tekan untuk buka video YouTube</div>`:`<div class="td-video-empty">Belum ada video persembahan.</div>`;
     h+=`</div></div></div>`;
@@ -3560,7 +3556,7 @@ function buildTeamDetail(){
   if(!adminOK){ $('#teamBody').querySelectorAll('[data-video]').forEach(el=>el.onclick=()=>openVideo(el.dataset.video)); return; }
   let sv=null; const flush=()=>{clearTimeout(sv);sv=setTimeout(()=>{save();renderPublic();},350);};
   const setField=(id,key,transform=v=>v)=>{const el=$('#'+id);if(el)el.oninput=()=>{const t2=team(activeDetail);if(t2){t2[key]=transform(el.value.trim());if(key==='logo'){const p=$('#tdLogoPreview');if(p)p.style.backgroundImage=t2.logo?`url('${imgSrc(t2.logo)}')`:'';}if(key==='teamImage'){const p=$('#tdTeamImagePreview');if(p)p.style.backgroundImage=t2.teamImage?`url('${imgSrc(t2.teamImage)}')`:'';}flush();}};};
-  setField('tdLogoUrl','logo');setField('tdTeamImageUrl','teamImage');setField('tdDanceName','danceName');setField('tdDanceSynopsis','danceSynopsis');setField('tdVideo','video');
+  setField('tdLogoUrl','logo');setField('tdTeamImageUrl','teamImage');setField('tdVideo','video');
   $('#teamBody').querySelectorAll('[data-video]').forEach(el=>el.onclick=()=>openVideo(el.dataset.video));
   $('#teamBody').querySelectorAll('.ach-in').forEach(inp=>inp.oninput=()=>{const t2=team(activeDetail);if(t2){t2.ach[+inp.dataset.ai]=inp.value;flush();}});
   $('#teamBody').querySelectorAll('[data-adel]').forEach(b=>b.onclick=()=>{const t2=team(activeDetail);if(t2){t2.ach.splice(+b.dataset.adel,1);save();renderPublic();buildTeamDetail();}});

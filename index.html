@@ -266,8 +266,8 @@
   .obsc-scroll{overflow-x:auto;padding:6px 0 16px;-webkit-overflow-scrolling:touch;scrollbar-width:thin}
   .obsc-scroll::-webkit-scrollbar{height:8px}.obsc-scroll::-webkit-scrollbar-thumb{background:var(--line-2);border-radius:8px}
   .obsc{display:flex;gap:24px;align-items:flex-start;width:max-content;padding:0 4px}
-  .obsc-col{display:flex;flex-direction:column;flex:0 0 auto;width:128px}
-  .obsc-col.center{width:172px}
+  .obsc-col{display:flex;flex-direction:column;flex:0 0 auto;width:168px}
+  .obsc-col.center{width:190px}
   .obsc-h{font-family:var(--display);text-transform:uppercase;letter-spacing:.7px;font-size:11px;font-weight:600;color:var(--muted);text-align:center;margin-bottom:12px;white-space:nowrap}
   .obsc-box{position:relative;background:var(--panel);border:1px solid var(--line);border-radius:9px;box-shadow:0 1px 3px rgba(24,16,32,.05)}
   .obsc-ft{font-size:8px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);font-weight:700;padding:3px 8px 0}
@@ -278,8 +278,10 @@
   .obsc-team.bye .obsc-bar,.obsc-team.tbd .obsc-bar{display:none}
   .obsc-team+.obsc-team{border-top:1px solid var(--line)}
   .obsc-ic{width:17px;height:12px;object-fit:cover;border-radius:2px;flex:none;box-shadow:0 0 0 1px var(--line);background:var(--panel-2)}
-  .obsc-ic.lg,.obsc-ic.dot{width:14px;height:14px;border-radius:50%;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),0 0 0 1px var(--line)}
-  .obsc-cd{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.3px;color:var(--txt)}
+  .obsc-ic.lg,.obsc-ic.dot{width:20px;height:20px;border-radius:50%;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3),0 0 0 1px var(--line)}
+  .obsc-cd{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.1px;color:var(--txt);font-family:var(--body);font-size:10px;font-weight:700;line-height:1.15}
+  .obsc-cd-full{display:block;overflow:visible;text-overflow:clip;white-space:normal;line-height:1.05;word-break:normal}
+  .obsc-cd-short{display:block;color:var(--muted);font-family:var(--mono);font-size:8px;font-weight:700;margin-top:2px}
   .obsc-pen{font-size:10px;color:var(--muted);font-weight:700}
   .obsc-sc{font-weight:800;color:var(--muted);min-width:14px;text-align:right}
   .obsc-team.win .obsc-cd,.obsc-team.win .obsc-sc{color:var(--mint)}
@@ -3694,8 +3696,9 @@ function obscTeam(code,sc,win,pen,pos,plabel){
   const t=team(code);
   if(!t)return `<div class="obsc-team tbd">${pl}<span class="obsc-ic dot" style="background:var(--line-2)"></span><span class="obsc-cd">TBD</span><span class="obsc-sc"></span></div>`;
   const acc=pos==='top'?'#E23B3B':(pos==='bot'?'#22B36B':t.color);
-  const ic=t.flag?`<img class="obsc-ic" src="${imgSrc(t.flag)}" alt="" loading="lazy">`:(t.logo?`<span class="obsc-ic lg" style="background-image:url('${imgSrc(t.logo)}')"></span>`:`<span class="obsc-ic dot" style="background:${acc}"></span>`);
-  return `<div class="obsc-team${win?' win':''}" style="--c:${acc}"><span class="obsc-bar"></span>${pl}${ic}<span class="obsc-cd">${esc(tShort(t))}</span>${pen!=null?`<span class="obsc-pen">(${pen})</span>`:''}<span class="obsc-sc">${sc!=null?sc:''}</span></div>`;
+  const ic=t.logo?`<span class="obsc-ic lg" style="background-image:url('${imgSrc(t.logo)}')" title="${esc(tName(t))}"></span>`:`<span class="obsc-ic dot" style="background:${acc}"></span>`;
+  const flag=t.flag?`<img class="obsc-ic" src="${imgSrc(t.flag)}" alt="${esc(t.flagName||'')}" title="${esc(t.flagName||'')}" loading="lazy">`:'';
+  return `<div class="obsc-team${win?' win':''}" style="--c:${acc}"><span class="obsc-bar"></span>${pl}${ic}${flag}<span class="obsc-cd" title="${esc(tName(t))}"><span class="obsc-cd-full">${esc(tName(t))}</span><span class="obsc-cd-short">${esc(tShort(t))}</span></span>${pen!=null?`<span class="obsc-pen">(${pen})</span>`:''}<span class="obsc-sc">${sc!=null?sc:''}</span></div>`;
 }
 function obscBox(m,topL,botL,blink){
   const w=koWinner(m), tw=w==='top', bw=w==='bot', done=matchDone(m);

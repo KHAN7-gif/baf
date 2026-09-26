@@ -3593,7 +3593,7 @@ function mcTeam(code,win,pos){
 function matchCardBig(m,tap){
   const w=koWinner(m), tw=w==='top', bw=w==='bot', done=matchDone(m), bye=isBye(m.top)||isBye(m.bot);
   const live=!done&&m.status==='live'&&isReal(m.top)&&isReal(m.bot);
-  let status=done?(bye?'LOLOS · BYE':'SELESAI'):(live?'🔴 SEDANG':(isReal(m.top)&&isReal(m.bot)?'AKAN DATANG':'MENUNGGU'));
+  let status=done?(bye?'BYE':'SELESAI'):(live?'🔴 SEDANG':(isReal(m.top)&&isReal(m.bot)?'AKAN DATANG':'MENUNGGU'));
   let sc;
   if(m.ts!=null&&m.bs!=null)sc=`<span class="mc-n${tw?' win':''}">${m.ts}</span><span class="mc-col">⁚</span><span class="mc-n${bw?' win':''}">${m.bs}</span>`;
   else sc=`<span class="mc-vs">${bye?'BYE':'VS'}</span>`;
@@ -3977,7 +3977,7 @@ function bindSeedDraw(){
 function teamOpts(sel){ return `<option value="TBD"${sel==='TBD'||!sel?' selected':''}>— Kosong —</option><option value="BYE"${sel==='BYE'?' selected':''}>BYE</option>`+
   T.teams.map(t=>`<option value="${t.id}"${sel===t.id?' selected':''}>${esc(tName(t))}</option>`).join(''); }
 function admDraw(){
-  let h=`<div class="panel"><h2>Undian Tingkah Geruh</h2><p class="hint">${T.teams.length} pasukan · bracket ${bracketSize()} slot (baki jadi <b>BYE</b>, lolos automatik). Tekan undi rawak, atau susun sendiri di bawah. Pemenang naik automatik bila skor dimasukkan.</p>
+  let h=`<div class="panel"><h2>Undian Tingkah Geruh</h2><p class="hint">${T.teams.length} pasukan · bracket ${bracketSize()} slot (baki jadi <b>BYE</b> secara automatik). Tekan undi rawak, atau susun sendiri di bawah. Pemenang naik automatik bila skor dimasukkan.</p>
     <div class="btn-row"><button class="btn" id="drawRnd">🎲 Undi rawak</button><button class="btn ghost" id="drawEmpty">Bracket kosong</button></div></div>`;
   h+=admSeedDraw();
   if(T.ko&&T.ko.length){

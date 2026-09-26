@@ -2993,12 +2993,24 @@ function waitFB(ms=8000){
 const Store={
   async get(k){
     _fromCloud=false;
-    try{ if(fbReady()){ const v=await window.__FB.get(); if(v!=null){ _fromCloud=true; return v; } } }catch(e){}
-    try{ const v=localStorage.getItem(k); if(v)return JSON.parse(v); }catch(e){}
+    let cloud=null, local=null, backup=null;
+    try{ if(fbReady())cloud=await window.__FB.get(); }catch(e){}
+    try{ const v=localStorage.getItem(k); if(v)local=JSON.parse(v); }catch(e){}
+    try{ const v=localStorage.getItem(k+'_backup'); if(v)backup=JSON.parse(v); }catch(e){}
+    const namedCount=v=>Array.isArray(v?.teams)?v.teams.filter(t=>t&&t.name&&t.name.trim()).length:0;
+    if(cloud&&cloud.teams){
+      if(namedCount(cloud)<10&&Math.max(namedCount(local),namedCount(backup))>namedCount(cloud)){
+        const recovered=namedCount(local)>=namedCount(backup)?local:backup;
+        if(recovered){ _fromCloud=false; return recovered; }
+      }
+      _fromCloud=true; return cloud;
+    }
+    if(local&&local.teams)return local;
+    if(backup&&backup.teams)return backup;
     return mem[k]??null;
   },
   async set(k,val){ const s=JSON.stringify(val); mem[k]=val;
-    try{ localStorage.setItem(k,s); }catch(e){}          // sandaran tempatan sentiasa
+    try{ localStorage.setItem(k+'_backup',s); localStorage.setItem(k,s); }catch(e){}
     if(fbReady()&&!isViewOnly()){ try{ await window.__FB.set(val); }catch(e){ console.warn('cloud save fail',e); try{toast('Gagal simpan ke awan',1);}catch(_){}} }
   }
 };
@@ -4651,6 +4663,9 @@ function cloudBadge(on){
 }
 function applyRemote(remote){
   if(!remote)return;
+  const currentNamed=Array.isArray(T?.teams)?T.teams.filter(t=>t&&t.name&&t.name.trim()).length:0;
+  const remoteNamed=Array.isArray(remote.teams)?remote.teams.filter(t=>t&&t.name&&t.name.trim()).length:0;
+  if(remoteNamed<10&&currentNamed>remoteNamed)return;
   const s=JSON.stringify(remote);
   if(s===_lastSync)return;                 // gema tulisan sendiri / tiada perubahan
   const ae=document.activeElement;
@@ -4699,8 +4714,7 @@ function applyRemote(remote){
 
   let loaded=await Store.get(KEY);
   const fresh=!loaded||!loaded.teams;
-  const oldDemo=!!loaded && (!loaded.name || loaded.name==='BATTLE ZAPIN' || (Array.isArray(loaded.teams)&&loaded.teams.filter(t=>t&&t.name&&t.name.trim()).length<10));
-  T=(fresh||oldDemo)?seed():loaded;
+  T=fresh?seed():loaded;
   if(!T.ko)T.ko=[];
   if(T.thirdPlace===undefined)T.thirdPlace=true;
   if(!T.adminUser)T.adminUser='admin';
